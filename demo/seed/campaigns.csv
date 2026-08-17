@@ -1,0 +1,147 @@
+campaign_id,campaign_name,actor_id,target_sector,mitre_ttps,severity,status,start_date,end_date
+CMP-0001,Operation Pale Drift,TA-0006,Retail,T1567 Exfil to Cloud; T1566 Phishing,medium,closed,2024-08-08,2025-01-15
+CMP-0002,Operation Amber Vault,TA-0032,SaaS / Cloud Storage,T1136 Create Account; T1566 Phishing; T1530 Data from Cloud Storage,low,contained,2025-01-02,2025-06-06
+CMP-0003,Operation Velvet Spire,TA-0035,SaaS / Cloud Storage,T1098 Account Manipulation; T1621 MFA Request Generation; T1530 Data from Cloud Storage; T1486 Data Encrypted for Impact,critical,closed,2025-04-30,2025-07-02
+CMP-0004,Operation Amber Vault,TA-0025,Retail,T1621 MFA Request Generation; T1110 Brute Force; T1136 Create Account; T1539 Steal Session Cookie,low,active,2025-11-26,
+CMP-0005,Operation Frost Vault,TA-0040,Manufacturing,T1539 Steal Session Cookie; T1486 Data Encrypted for Impact,critical,monitoring,2025-11-18,
+CMP-0006,Operation Pale Harvest,TA-0028,Education,T1098 Account Manipulation; T1621 MFA Request Generation; T1136 Create Account; T1530 Data from Cloud Storage,low,active,2024-11-09,
+CMP-0007,Operation Silent Falcon,TA-0004,Financial Services,T1566 Phishing; T1539 Steal Session Cookie; T1621 MFA Request Generation; T1136 Create Account,high,contained,2024-10-20,
+CMP-0008,Operation Onyx Cascade,TA-0040,Media,T1621 MFA Request Generation; T1098 Account Manipulation; T1567 Exfil to Cloud,medium,active,2025-06-10,
+CMP-0009,Operation Iron Lantern,TA-0035,Education,T1059 Command and Scripting; T1530 Data from Cloud Storage; T1078 Valid Accounts,medium,active,2024-09-06,2024-12-26
+CMP-0010,Operation Onyx Echo,TA-0034,Retail,T1486 Data Encrypted for Impact; T1078 Valid Accounts; T1566 Phishing,high,monitoring,2025-11-21,2026-05-02
+CMP-0011,Operation Hollow Drift,TA-0029,Energy,T1078 Valid Accounts; T1567 Exfil to Cloud; T1566 Phishing,low,contained,2026-04-29,2026-06-01
+CMP-0012,Operation Granite Cascade,TA-0033,Energy,T1136 Create Account; T1566 Phishing,high,closed,2024-09-02,
+CMP-0013,Operation Hollow Spire,TA-0026,Manufacturing,T1530 Data from Cloud Storage; T1110 Brute Force,high,contained,2024-09-23,2024-10-12
+CMP-0014,Operation Velvet Spire,TA-0031,SaaS / Cloud Storage,T1136 Create Account; T1098 Account Manipulation; T1621 MFA Request Generation; T1566 Phishing,medium,monitoring,2024-11-28,2025-03-19
+CMP-0015,Operation Iron Drift,TA-0007,Government,T1567 Exfil to Cloud; T1110 Brute Force,medium,closed,2024-09-03,
+CMP-0016,Operation Pale Harvest,TA-0015,Technology,T1078 Valid Accounts; T1059 Command and Scripting; T1621 MFA Request Generation; T1136 Create Account,critical,closed,2025-06-22,
+CMP-0017,Operation Hollow Anvil,TA-0007,Technology,T1136 Create Account; T1530 Data from Cloud Storage; T1539 Steal Session Cookie,low,contained,2026-04-22,2026-06-01
+CMP-0018,Operation Velvet Vault,TA-0005,Media,T1136 Create Account; T1110 Brute Force; T1567 Exfil to Cloud; T1530 Data from Cloud Storage,high,active,2024-12-14,
+CMP-0019,Operation Crimson Tide,TA-0029,Government,T1110 Brute Force; T1539 Steal Session Cookie; T1078 Valid Accounts; T1486 Data Encrypted for Impact,medium,contained,2025-08-08,
+CMP-0020,Operation Pale Harvest,TA-0011,Healthcare,T1110 Brute Force; T1136 Create Account; T1098 Account Manipulation; T1539 Steal Session Cookie,critical,active,2026-02-17,2026-05-30
+CMP-0021,Operation Granite Cascade,TA-0028,Retail,T1098 Account Manipulation; T1078 Valid Accounts; T1136 Create Account; T1110 Brute Force,medium,monitoring,2025-11-11,2026-01-30
+CMP-0022,Operation Granite Spire,TA-0033,Healthcare,T1110 Brute Force; T1530 Data from Cloud Storage; T1486 Data Encrypted for Impact,high,monitoring,2024-12-07,
+CMP-0023,Operation Granite Harvest,TA-0004,Retail,T1621 MFA Request Generation; T1486 Data Encrypted for Impact; T1110 Brute Force; T1136 Create Account,medium,monitoring,2024-08-10,2024-11-08
+CMP-0024,Operation Amber Falcon,TA-0025,Media,T1136 Create Account; T1621 MFA Request Generation; T1566 Phishing,high,closed,2024-11-01,2025-04-21
+CMP-0025,Operation Granite Anvil,TA-0015,Education,T1486 Data Encrypted for Impact; T1059 Command and Scripting,high,monitoring,2024-08-10,2025-01-27
+CMP-0026,Operation Velvet Spire,TA-0014,Education,T1566 Phishing; T1110 Brute Force; T1621 MFA Request Generation; T1567 Exfil to Cloud,low,contained,2025-12-31,2026-06-01
+CMP-0027,Operation Crimson Vault,TA-0034,Financial Services,T1136 Create Account; T1059 Command and Scripting; T1530 Data from Cloud Storage; T1621 MFA Request Generation,high,closed,2025-07-04,2025-10-05
+CMP-0028,Operation Crimson Anvil,TA-0011,Manufacturing,T1486 Data Encrypted for Impact; T1621 MFA Request Generation; T1530 Data from Cloud Storage,high,active,2025-10-01,
+CMP-0029,Operation Frost Tide,TA-0020,Energy,T1530 Data from Cloud Storage; T1098 Account Manipulation; T1567 Exfil to Cloud,high,contained,2026-02-03,2026-04-27
+CMP-0030,Operation Frost Drift,TA-0009,Technology,T1567 Exfil to Cloud; T1098 Account Manipulation; T1621 MFA Request Generation,high,closed,2025-01-27,
+CMP-0031,Operation Iron Spire,TA-0005,Media,T1567 Exfil to Cloud; T1566 Phishing; T1059 Command and Scripting; T1530 Data from Cloud Storage,critical,active,2025-01-04,2025-03-22
+CMP-0032,Operation Iron Anvil,TA-0034,Government,T1098 Account Manipulation; T1530 Data from Cloud Storage; T1567 Exfil to Cloud,medium,monitoring,2024-07-25,
+CMP-0033,Operation Granite Falcon,TA-0019,SaaS / Cloud Storage,T1566 Phishing; T1486 Data Encrypted for Impact,low,monitoring,2024-11-12,
+CMP-0034,Operation Amber Cascade,TA-0013,Manufacturing,T1136 Create Account; T1486 Data Encrypted for Impact; T1539 Steal Session Cookie,medium,monitoring,2024-10-05,2025-02-24
+CMP-0035,Operation Pale Tide,TA-0001,Financial Services,T1098 Account Manipulation; T1059 Command and Scripting; T1567 Exfil to Cloud,critical,monitoring,2025-10-01,2026-02-24
+CMP-0036,Operation Iron Vault,TA-0015,Government,T1136 Create Account; T1078 Valid Accounts; T1539 Steal Session Cookie,low,closed,2024-11-10,
+CMP-0037,Operation Crimson Falcon,TA-0006,Government,T1059 Command and Scripting; T1098 Account Manipulation; T1078 Valid Accounts,medium,contained,2026-01-14,2026-04-15
+CMP-0038,Operation Amber Cascade,TA-0015,Government,T1530 Data from Cloud Storage; T1567 Exfil to Cloud; T1078 Valid Accounts; T1566 Phishing,low,closed,2024-08-30,
+CMP-0039,Operation Crimson Drift,TA-0029,Financial Services,T1136 Create Account; T1567 Exfil to Cloud; T1486 Data Encrypted for Impact; T1530 Data from Cloud Storage,critical,closed,2026-03-04,2026-06-01
+CMP-0040,Operation Amber Falcon,TA-0018,Media,T1621 MFA Request Generation; T1566 Phishing; T1530 Data from Cloud Storage; T1486 Data Encrypted for Impact,medium,monitoring,2026-05-18,2026-06-01
+CMP-0041,Operation Silent Lantern,TA-0006,Retail,T1530 Data from Cloud Storage; T1567 Exfil to Cloud; T1566 Phishing,low,contained,2025-12-27,
+CMP-0042,Operation Crimson Falcon,TA-0015,Healthcare,T1110 Brute Force; T1136 Create Account; T1486 Data Encrypted for Impact; T1059 Command and Scripting,high,closed,2026-05-12,
+CMP-0043,Operation Pale Echo,TA-0014,Energy,T1539 Steal Session Cookie; T1530 Data from Cloud Storage; T1566 Phishing; T1098 Account Manipulation,critical,monitoring,2024-11-22,
+CMP-0044,Operation Iron Harvest,TA-0007,Retail,T1530 Data from Cloud Storage; T1110 Brute Force; T1621 MFA Request Generation; T1566 Phishing,critical,contained,2025-09-05,2025-11-27
+CMP-0045,Operation Crimson Harvest,TA-0034,Government,T1136 Create Account; T1110 Brute Force; T1621 MFA Request Generation; T1539 Steal Session Cookie,high,contained,2025-11-14,
+CMP-0046,Operation Silent Harvest,TA-0013,Healthcare,T1078 Valid Accounts; T1098 Account Manipulation,critical,active,2025-02-28,2025-07-13
+CMP-0047,Operation Amber Drift,TA-0035,Technology,T1566 Phishing; T1098 Account Manipulation; T1539 Steal Session Cookie,critical,contained,2025-04-09,
+CMP-0048,Operation Velvet Cascade,TA-0028,Media,T1530 Data from Cloud Storage; T1566 Phishing,medium,contained,2025-07-01,2025-09-15
+CMP-0049,Operation Iron Drift,TA-0021,Financial Services,T1566 Phishing; T1486 Data Encrypted for Impact; T1621 MFA Request Generation; T1098 Account Manipulation,high,monitoring,2025-02-26,2025-03-16
+CMP-0050,Operation Granite Lantern,TA-0033,Education,T1621 MFA Request Generation; T1110 Brute Force; T1098 Account Manipulation; T1486 Data Encrypted for Impact,medium,monitoring,2026-01-29,2026-06-01
+CMP-0051,Operation Hollow Cascade,TA-0039,Government,T1486 Data Encrypted for Impact; T1567 Exfil to Cloud; T1136 Create Account,critical,closed,2026-01-01,2026-03-20
+CMP-0052,Operation Hollow Drift,TA-0005,Retail,T1098 Account Manipulation; T1110 Brute Force,medium,monitoring,2024-12-25,2025-03-05
+CMP-0053,Operation Frost Harvest,TA-0015,Education,T1530 Data from Cloud Storage; T1486 Data Encrypted for Impact,critical,active,2026-01-19,2026-03-25
+CMP-0054,Operation Pale Lantern,TA-0001,Healthcare,T1059 Command and Scripting; T1486 Data Encrypted for Impact; T1567 Exfil to Cloud,medium,monitoring,2026-05-04,2026-06-01
+CMP-0055,Operation Granite Anvil,TA-0019,Media,T1110 Brute Force; T1566 Phishing; T1539 Steal Session Cookie,high,monitoring,2024-07-19,2024-10-09
+CMP-0056,Operation Onyx Falcon,TA-0032,Education,T1486 Data Encrypted for Impact; T1136 Create Account,low,contained,2024-08-29,2024-10-13
+CMP-0057,Operation Onyx Echo,TA-0007,Education,T1567 Exfil to Cloud; T1486 Data Encrypted for Impact; T1059 Command and Scripting; T1110 Brute Force,low,monitoring,2025-09-25,
+CMP-0058,Operation Amber Falcon,TA-0023,Financial Services,T1486 Data Encrypted for Impact; T1110 Brute Force; T1621 MFA Request Generation; T1539 Steal Session Cookie,medium,monitoring,2025-08-30,2025-09-18
+CMP-0059,Operation Onyx Drift,TA-0019,Financial Services,T1566 Phishing; T1059 Command and Scripting; T1098 Account Manipulation,low,closed,2025-10-19,2025-11-21
+CMP-0060,Operation Granite Tide,TA-0003,Healthcare,T1566 Phishing; T1059 Command and Scripting; T1567 Exfil to Cloud; T1486 Data Encrypted for Impact,medium,active,2024-12-18,2025-01-30
+CMP-0061,Operation Velvet Drift,TA-0029,Healthcare,T1098 Account Manipulation; T1110 Brute Force; T1136 Create Account; T1567 Exfil to Cloud,low,closed,2025-08-02,
+CMP-0062,Operation Silent Anvil,TA-0012,Media,T1567 Exfil to Cloud; T1566 Phishing; T1110 Brute Force,low,monitoring,2025-01-30,2025-06-24
+CMP-0063,Operation Hollow Harvest,TA-0027,Education,T1621 MFA Request Generation; T1078 Valid Accounts; T1567 Exfil to Cloud,medium,closed,2026-02-27,
+CMP-0064,Operation Silent Lantern,TA-0007,Government,T1078 Valid Accounts; T1566 Phishing; T1530 Data from Cloud Storage; T1621 MFA Request Generation,medium,active,2025-03-04,2025-06-06
+CMP-0065,Operation Crimson Spire,TA-0017,SaaS / Cloud Storage,T1567 Exfil to Cloud; T1621 MFA Request Generation; T1136 Create Account,medium,contained,2026-01-19,2026-02-09
+CMP-0066,Operation Hollow Vault,TA-0012,Financial Services,T1621 MFA Request Generation; T1530 Data from Cloud Storage; T1078 Valid Accounts; T1059 Command and Scripting,medium,contained,2026-01-06,
+CMP-0067,Operation Frost Lantern,TA-0027,Government,T1486 Data Encrypted for Impact; T1567 Exfil to Cloud,low,contained,2026-03-24,2026-06-01
+CMP-0068,Operation Frost Vault,TA-0024,SaaS / Cloud Storage,T1136 Create Account; T1098 Account Manipulation; T1621 MFA Request Generation,low,active,2025-11-09,2026-04-26
+CMP-0069,Operation Silent Spire,TA-0018,SaaS / Cloud Storage,T1539 Steal Session Cookie; T1110 Brute Force; T1567 Exfil to Cloud,medium,active,2025-07-30,2025-09-02
+CMP-0070,Operation Iron Harvest,TA-0002,Technology,T1110 Brute Force; T1059 Command and Scripting; T1136 Create Account; T1530 Data from Cloud Storage,high,contained,2026-03-13,
+CMP-0071,Operation Amber Harvest,TA-0007,Financial Services,T1566 Phishing; T1530 Data from Cloud Storage; T1539 Steal Session Cookie,high,monitoring,2026-04-30,
+CMP-0072,Operation Velvet Vault,TA-0022,Healthcare,T1098 Account Manipulation; T1566 Phishing; T1078 Valid Accounts; T1530 Data from Cloud Storage,medium,monitoring,2024-10-12,2024-12-27
+CMP-0073,Operation Pale Drift,TA-0020,Financial Services,T1486 Data Encrypted for Impact; T1110 Brute Force; T1136 Create Account,medium,monitoring,2025-12-18,2026-01-25
+CMP-0074,Operation Hollow Cascade,TA-0036,SaaS / Cloud Storage,T1567 Exfil to Cloud; T1078 Valid Accounts,high,monitoring,2025-01-25,2025-02-07
+CMP-0075,Operation Iron Echo,TA-0001,Retail,T1530 Data from Cloud Storage; T1539 Steal Session Cookie; T1567 Exfil to Cloud,high,monitoring,2024-10-27,
+CMP-0076,Operation Hollow Vault,TA-0020,Financial Services,T1078 Valid Accounts; T1567 Exfil to Cloud,low,monitoring,2025-12-23,2026-06-01
+CMP-0077,Operation Onyx Spire,TA-0032,Manufacturing,T1059 Command and Scripting; T1566 Phishing; T1136 Create Account,critical,closed,2024-08-24,2024-11-30
+CMP-0078,Operation Iron Echo,TA-0040,Manufacturing,T1098 Account Manipulation; T1486 Data Encrypted for Impact; T1110 Brute Force,low,contained,2024-08-20,
+CMP-0079,Operation Hollow Falcon,TA-0016,Government,T1539 Steal Session Cookie; T1567 Exfil to Cloud; T1486 Data Encrypted for Impact,critical,active,2024-10-31,2025-03-24
+CMP-0080,Operation Amber Drift,TA-0025,Retail,T1621 MFA Request Generation; T1098 Account Manipulation,medium,monitoring,2025-05-03,
+CMP-0081,Operation Crimson Echo,TA-0018,Retail,T1059 Command and Scripting; T1098 Account Manipulation,medium,closed,2024-10-30,2024-12-26
+CMP-0082,Operation Crimson Spire,TA-0015,Manufacturing,T1567 Exfil to Cloud; T1110 Brute Force; T1566 Phishing,low,contained,2025-06-06,2025-06-16
+CMP-0083,Operation Granite Echo,TA-0003,Financial Services,T1136 Create Account; T1110 Brute Force; T1567 Exfil to Cloud; T1530 Data from Cloud Storage,low,contained,2025-04-28,2025-08-14
+CMP-0084,Operation Velvet Cascade,TA-0013,Retail,T1136 Create Account; T1110 Brute Force; T1567 Exfil to Cloud; T1530 Data from Cloud Storage,high,active,2026-05-09,2026-06-01
+CMP-0085,Operation Granite Drift,TA-0017,Healthcare,T1078 Valid Accounts; T1539 Steal Session Cookie; T1486 Data Encrypted for Impact; T1098 Account Manipulation,critical,active,2025-05-18,
+CMP-0086,Operation Hollow Vault,TA-0005,Media,T1539 Steal Session Cookie; T1136 Create Account; T1078 Valid Accounts; T1098 Account Manipulation,low,closed,2024-07-28,
+CMP-0087,Operation Iron Falcon,TA-0018,Energy,T1110 Brute Force; T1098 Account Manipulation; T1621 MFA Request Generation,medium,contained,2024-08-05,2024-10-27
+CMP-0088,Operation Iron Harvest,TA-0029,Government,T1078 Valid Accounts; T1486 Data Encrypted for Impact; T1098 Account Manipulation,low,monitoring,2025-04-30,
+CMP-0089,Operation Velvet Vault,TA-0032,Healthcare,T1078 Valid Accounts; T1486 Data Encrypted for Impact,critical,active,2025-06-09,2025-09-20
+CMP-0090,Operation Iron Spire,TA-0011,Technology,T1078 Valid Accounts; T1621 MFA Request Generation; T1539 Steal Session Cookie; T1098 Account Manipulation,critical,active,2026-03-15,2026-06-01
+CMP-0091,Operation Iron Cascade,TA-0016,Education,T1566 Phishing; T1059 Command and Scripting; T1078 Valid Accounts,low,contained,2025-06-18,2025-08-02
+CMP-0092,Operation Granite Lantern,TA-0013,Healthcare,T1566 Phishing; T1486 Data Encrypted for Impact,high,contained,2024-12-11,2025-06-03
+CMP-0093,Operation Onyx Vault,TA-0032,Financial Services,T1530 Data from Cloud Storage; T1136 Create Account; T1539 Steal Session Cookie,critical,active,2025-12-24,
+CMP-0094,Operation Frost Echo,TA-0017,SaaS / Cloud Storage,T1078 Valid Accounts; T1136 Create Account; T1567 Exfil to Cloud; T1539 Steal Session Cookie,critical,active,2025-02-07,2025-08-11
+CMP-0095,Operation Pale Anvil,TA-0004,Media,T1566 Phishing; T1110 Brute Force; T1136 Create Account; T1486 Data Encrypted for Impact,medium,active,2026-02-02,
+CMP-0096,Operation Granite Cascade,TA-0039,Energy,T1530 Data from Cloud Storage; T1567 Exfil to Cloud,low,closed,2026-02-07,
+CMP-0097,Operation Crimson Spire,TA-0004,Media,T1621 MFA Request Generation; T1078 Valid Accounts,critical,contained,2026-01-17,2026-06-01
+CMP-0098,Operation Velvet Drift,TA-0014,Technology,T1621 MFA Request Generation; T1136 Create Account; T1566 Phishing,critical,contained,2025-10-02,2025-10-18
+CMP-0099,Operation Frost Vault,TA-0006,Media,T1059 Command and Scripting; T1567 Exfil to Cloud,medium,monitoring,2025-06-10,2025-07-21
+CMP-0100,Operation Frost Lantern,TA-0019,Manufacturing,T1078 Valid Accounts; T1621 MFA Request Generation; T1110 Brute Force; T1566 Phishing,critical,closed,2024-11-19,
+CMP-0101,Operation Amber Echo,TA-0010,SaaS / Cloud Storage,T1098 Account Manipulation; T1136 Create Account; T1110 Brute Force; T1567 Exfil to Cloud,low,monitoring,2024-08-06,2025-01-24
+CMP-0102,Operation Velvet Cascade,TA-0001,Manufacturing,T1539 Steal Session Cookie; T1486 Data Encrypted for Impact,high,contained,2026-04-08,
+CMP-0103,Operation Hollow Harvest,TA-0033,Healthcare,T1566 Phishing; T1486 Data Encrypted for Impact,high,monitoring,2025-07-10,2025-12-17
+CMP-0104,Operation Frost Lantern,TA-0029,Manufacturing,T1530 Data from Cloud Storage; T1621 MFA Request Generation; T1539 Steal Session Cookie; T1566 Phishing,high,contained,2025-08-12,2026-02-03
+CMP-0105,Operation Crimson Tide,TA-0020,Energy,T1530 Data from Cloud Storage; T1539 Steal Session Cookie,critical,monitoring,2026-02-17,
+CMP-0106,Operation Granite Harvest,TA-0037,Media,T1621 MFA Request Generation; T1530 Data from Cloud Storage; T1098 Account Manipulation,high,contained,2025-02-20,2025-03-23
+CMP-0107,Operation Frost Anvil,TA-0015,Technology,T1078 Valid Accounts; T1098 Account Manipulation,critical,closed,2024-07-09,2024-08-28
+CMP-0108,Operation Amber Vault,TA-0037,Financial Services,T1136 Create Account; T1567 Exfil to Cloud; T1539 Steal Session Cookie,high,closed,2024-08-04,2025-01-29
+CMP-0109,Operation Iron Anvil,TA-0010,Healthcare,T1621 MFA Request Generation; T1566 Phishing; T1098 Account Manipulation,low,active,2025-03-30,2025-10-16
+CMP-0110,Operation Granite Anvil,TA-0033,Education,T1098 Account Manipulation; T1486 Data Encrypted for Impact; T1059 Command and Scripting,medium,active,2025-09-24,
+CMP-0111,Operation Iron Falcon,TA-0016,Manufacturing,T1486 Data Encrypted for Impact; T1110 Brute Force; T1621 MFA Request Generation,low,active,2026-04-18,2026-06-01
+CMP-0112,Operation Pale Vault,TA-0021,SaaS / Cloud Storage,T1486 Data Encrypted for Impact; T1566 Phishing; T1078 Valid Accounts,critical,active,2026-03-01,
+CMP-0113,Operation Velvet Echo,TA-0004,Manufacturing,T1621 MFA Request Generation; T1530 Data from Cloud Storage; T1059 Command and Scripting; T1136 Create Account,low,closed,2026-01-28,2026-02-17
+CMP-0114,Operation Hollow Lantern,TA-0007,Media,T1110 Brute Force; T1136 Create Account,medium,contained,2025-06-14,
+CMP-0115,Operation Frost Tide,TA-0037,Healthcare,T1078 Valid Accounts; T1530 Data from Cloud Storage; T1136 Create Account; T1566 Phishing,medium,monitoring,2025-11-08,2026-01-03
+CMP-0116,Operation Onyx Anvil,TA-0038,Financial Services,T1566 Phishing; T1539 Steal Session Cookie,critical,closed,2025-02-28,2025-05-14
+CMP-0117,Operation Frost Cascade,TA-0037,SaaS / Cloud Storage,T1539 Steal Session Cookie; T1530 Data from Cloud Storage,low,active,2026-05-24,2026-06-01
+CMP-0118,Operation Velvet Vault,TA-0030,Healthcare,T1059 Command and Scripting; T1566 Phishing,medium,monitoring,2024-08-09,2024-10-04
+CMP-0119,Operation Pale Cascade,TA-0014,Manufacturing,T1078 Valid Accounts; T1621 MFA Request Generation; T1486 Data Encrypted for Impact,low,monitoring,2024-12-05,2024-12-31
+CMP-0120,Operation Hollow Lantern,TA-0035,SaaS / Cloud Storage,T1078 Valid Accounts; T1530 Data from Cloud Storage; T1098 Account Manipulation; T1621 MFA Request Generation,critical,contained,2025-11-28,
+CMP-0121,URLhaus Amadey distribution,TA-0034,Technology,T1078 Valid Accounts; T1566 Phishing,high,active,2026-05-26,
+CMP-0122,URLhaus ClearFake distribution,TA-0034,Manufacturing,T1566 Phishing; T1530 Data from Cloud Storage,critical,active,2026-05-31,
+CMP-0123,URLhaus CoinMiner distribution,TA-0008,Manufacturing,T1530 Data from Cloud Storage; T1566 Phishing,high,active,2026-05-14,
+CMP-0124,URLhaus ConnectWise distribution,TA-0024,SaaS / Cloud Storage,T1110 Brute Force; T1567 Exfil to Cloud,critical,active,2026-05-11,
+CMP-0125,URLhaus Formbook distribution,TA-0008,Technology,T1110 Brute Force; T1566 Phishing,critical,active,2026-05-13,
+CMP-0126,URLhaus Gafgyt distribution,TA-0019,Energy,T1621 MFA Request Generation; T1110 Brute Force,high,active,2026-05-29,
+CMP-0127,URLhaus Generic distribution,TA-0031,Technology,T1078 Valid Accounts; T1136 Create Account,critical,active,2026-05-21,
+CMP-0128,URLhaus GuLoader distribution,TA-0040,SaaS / Cloud Storage,T1078 Valid Accounts; T1567 Exfil to Cloud,high,active,2026-05-06,
+CMP-0129,URLhaus KongTuke distribution,TA-0036,Energy,T1486 Data Encrypted for Impact; T1078 Valid Accounts,high,active,2026-05-22,
+CMP-0130,URLhaus LeetHozer distribution,TA-0009,SaaS / Cloud Storage,T1567 Exfil to Cloud; T1110 Brute Force,high,active,2026-05-15,
+CMP-0131,URLhaus MassLogger distribution,TA-0029,SaaS / Cloud Storage,T1621 MFA Request Generation; T1098 Account Manipulation,medium,active,2026-05-22,
+CMP-0132,URLhaus Mirai distribution,TA-0003,Energy,T1110 Brute Force; T1136 Create Account,critical,active,2026-05-11,
+CMP-0133,URLhaus Mozi distribution,TA-0024,SaaS / Cloud Storage,T1110 Brute Force; T1059 Command and Scripting,high,active,2026-05-02,
+CMP-0134,URLhaus Phorpiex distribution,TA-0040,Technology,T1486 Data Encrypted for Impact; T1567 Exfil to Cloud,high,active,2026-05-07,
+CMP-0135,URLhaus PureHVNC distribution,TA-0002,Energy,T1621 MFA Request Generation; T1098 Account Manipulation,medium,active,2026-05-03,
+CMP-0136,URLhaus PureLogsStealer distribution,TA-0012,Technology,T1621 MFA Request Generation; T1539 Steal Session Cookie,medium,active,2026-05-18,
+CMP-0137,URLhaus Ransomware.BlackMatter distribution,TA-0033,Manufacturing,T1539 Steal Session Cookie; T1098 Account Manipulation,critical,active,2026-05-09,
+CMP-0138,URLhaus Rekoobe distribution,TA-0024,Technology,T1530 Data from Cloud Storage; T1110 Brute Force,medium,active,2026-05-18,
+CMP-0139,URLhaus RemcosRAT distribution,TA-0013,Technology,T1621 MFA Request Generation; T1098 Account Manipulation,high,active,2026-05-04,
+CMP-0140,URLhaus RemusStealer distribution,TA-0009,Energy,T1621 MFA Request Generation; T1059 Command and Scripting,high,active,2026-05-13,
+CMP-0141,URLhaus SalatStealer distribution,TA-0001,Technology,T1486 Data Encrypted for Impact; T1539 Steal Session Cookie,medium,active,2026-05-13,
+CMP-0142,URLhaus Stealc distribution,TA-0036,Energy,T1486 Data Encrypted for Impact; T1621 MFA Request Generation,critical,active,2026-05-24,
+CMP-0143,URLhaus Tofsee distribution,TA-0028,Manufacturing,T1486 Data Encrypted for Impact; T1078 Valid Accounts,critical,active,2026-05-15,
+CMP-0144,URLhaus VantaRAT distribution,TA-0015,SaaS / Cloud Storage,T1059 Command and Scripting; T1098 Account Manipulation,high,active,2026-05-18,
+CMP-0145,URLhaus Vidar distribution,TA-0031,Manufacturing,T1136 Create Account; T1486 Data Encrypted for Impact,high,active,2026-05-12,
+CMP-0146,URLhaus a310Logger distribution,TA-0026,Energy,T1078 Valid Accounts; T1110 Brute Force,medium,active,2026-05-17,

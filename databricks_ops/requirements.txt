@@ -1,0 +1,4 @@
+# databricks_ops dependencies (imported by scripts/deploy.py, scripts/setup.py, and CI). Install with:
+#   pip install -r databricks_ops/requirements.txt
+databricks-sdk>=0.30
+pyyaml

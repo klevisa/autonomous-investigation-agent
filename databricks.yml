@@ -1,0 +1,413 @@
+# AIA Medium-Threat Autonomous Investigation — PoC (Databricks Asset Bundle)
+#
+# Deploys the whole PoC from code — the "show me the code / CI-CD" deliverable. Jobs + app:
+#   * build_structure  (job, one-time)  — the Lakebase cases/investigations/journal tables (OUR schema)
+#   * investigate      (job)            — the AUTONOMOUS AGENT. Triggered per-case by the app
+#                                         (jobs.run_now), so many run concurrently and NOT in the app.
+#   * aia-investigation-app (app)      — FastAPI Databricks App: the Tines-facing API + the live UI.
+#
+# The DEMO data (Delta substrate + 5 UC-function tools + 25 demo cases) is NOT in this bundle — it lives in
+# the separate demo/ bundle, deployed & run by a test-only seeder SP. AIA's real prod never seeds.
+#
+# LIFECYCLE (see README "Deployment lifecycle"): CI/CD deploys CODE only (jobs + app). build_structure is
+# run once/manually via `scripts/setup.py` — its definition ships here, but CI never *runs* it. Lakebase +
+# secrets are provisioned out of band (never in this bundle).
+#
+# Targets:
+#   stage — manual deploys by an engineer (scripts/deploy.py). Profile: stage.
+#   prod  — the CI/CD target. GitHub Actions runs `databricks bundle deploy -t prod` as a service
+#           principal on merge to master. run_as is the SP so the app + jobs run under a stable identity.
+#
+# One-time setup: (0) admin prereqs done OUT OF BAND — create the AIA role + grant it data/warehouse
+# access + [job mode] provision the job SP and ADD IT TO THE ROLE GROUP (no script; AIA tooling never
+# creates account principals or stores secrets); (1) deploy `scripts/deploy.py`; (2) post-deploy
+# `scripts/setup.py` (Lakebase → build_structure → wire app↔job) — and the admin adds the app SP to the AIA
+# role post-deploy (02). In prod (CI-locked), CI does step 1; run step 2 by hand (see README "End-to-end").
+bundle:
+  name: aia-poc
+
+# The shared library lib/ is built into the `aia-lib` WHEEL and installed into the serverless job
+# environments (see resources.jobs.*.environments below). This is the standard serverless pattern — the jobs
+# import `lib.*` from site-packages, so they never read lib/*.py off the /Workspace FUSE mount (which flaked
+# with OSError [Errno 5]). It replaced the per-job `_stage_lib_local` download helper. The APP still imports
+# lib/ from its own source tree (repo root is its source_code_path), so the wheel is jobs-only.
+#   dynamic_version: patches the wheel's version at deploy time so a changed lib/ always yields a NEW wheel
+#   filename — serverless caches installed libraries by filename, and a same-name wheel can be served stale.
+#   build: the CLI runs this on deploy; the deploy machine (engineer's box for stage, CI runner for prod)
+#   must have Python `build` installed (`pip install build`; its isolated env also fetches `hatchling`).
+#   Produces dist/aia_lib-*.whl. Note dynamic_version needs .git present for its version metadata.
+#   `python3` (not `python`): modern macOS/Linux ship python3 and no bare `python` (macOS removed
+#   /usr/bin/python) — an engineer's staging deploy box has python3; CI's setup-python provides both.
+artifacts:
+  aia_lib:
+    type: whl
+    build: python3 -m build --wheel
+    dynamic_version: true
+
+include:
+  # Glob (not a literal name) so the bundle validates even when config.yml is absent — it's gitignored,
+  # so CI checkouts won't have one. CI passes the per-env values as --var (from GitHub Actions repo
+  # variables); setup.py writes a local config.yml for manual runs. A literal include would error on the
+  # missing file; a glob tolerates zero matches.
+  - "config*.yml"
+
+variables:
+  # ALL bundle variables are STATIC names AIA chooses up front — nothing discovered, nothing secret.
+  # They're supplied per-environment as --var flags (by CI, from GitHub Actions repo *variables*, and by
+  # setup.py on first setup). config.yml is NOT committed (see .gitignore + .github/workflows/deploy.yml).
+  #
+  # The values that only exist AFTER deploy — the app SP id, the Lakebase host/endpoint, and the
+  # investigate job id — are NOT variables here. They're resolved at runtime from the names below
+  # (lib/resolve.py: SP id from the injected OAuth client id; host/endpoint from lakebase_project; job id
+  # by name). That's what makes this deploy-once with no "fill config.yml + redeploy" second pass.
+  catalog:
+    description: Catalog the Delta substrate + UC tools live in.
+    default: ""
+  schema:
+    description: Schema for the substrate + UC tools (the PoC uses ti_aia). Also the Postgres schema name.
+    default: ""
+  warehouse_id:
+    # In-process mode (the default here) runs the UC-function TOOLs through this warehouse — the app IS
+    # the orchestrator, so it queries Delta/UC directly. The investigate JOB (agent_mode=job) runs the
+    # tools on its own Spark instead and does NOT use this. Required for in_process; optional for job.
+    description: SQL warehouse the in-process app runs its UC-function tool queries through (Delta/UC).
+    default: ""
+  lakebase_project:
+    description: >-
+      Lakebase (autoscaling Postgres) project id. The endpoint HOST and endpoint PATH are derived from
+      this (+ the branch/endpoint below) at runtime — not stored — so they never go stale.
+    default: ""
+  # The branch + endpoint names default to the ones Databricks auto-creates. This is the ONE place they
+  # live: AIA overrides them here (or via --var) if their topology differs, and the value flows to the
+  # app, the jobs, the serving endpoint, and scripts/setup.py alike. resolve.py takes them as args and
+  # bakes in no default of its own.
+  lakebase_branch:
+    description: Lakebase branch that owns the endpoint (Databricks auto-creates 'production').
+    default: "production"
+  lakebase_endpoint:
+    description: Lakebase compute endpoint name (Databricks auto-creates 'primary').
+    default: "primary"
+  pg_database:
+    description: Lakebase Postgres database holding cases/investigations (AIA-chosen; created in setup).
+    default: ""
+  app_name:
+    description: The Databricks App resource name (what `databricks apps get` + the grant scripts use).
+    default: "aia-investigation-app"
+  deploy_suffix:
+    # EMPTY in real production — the prod bundle root is the single /Workspace/Shared/.bundle/aia-poc/prod.
+    # The e2e matrix runs several prod-target deployments (different test suffixes) back-to-back; without
+    # isolation they share that one root, so one run's teardown (which clears the root) races the next run's
+    # deploy — surfacing as "library file does not exist" when a job installs a wheel that just got cleared.
+    # The harness sets this to "-<suffix>" so each test deployment gets its OWN root; default "" leaves prod
+    # untouched. Only affects the prod root_path below.
+    description: Optional suffix on the prod bundle root path, to isolate parallel TEST deployments. Empty in prod.
+    default: ""
+  # LLM gateway — the endpoint URL is a PLAIN value (not sensitive); the TOKEN comes from AWS Secrets
+  # Manager, reached via a UC SERVICE CREDENTIAL that wraps an AWS IAM role (see lib/llm.py).
+  # No Databricks secret scope anymore. Local/tests can override with AIA_LLM_ENDPOINT_URL + AIA_LLM_TOKEN.
+  llm_endpoint_url:
+    description: The LLM gateway invocations URL (plain, non-secret).
+    default: ""
+  llm_service_credential:
+    description: Name of the UC service credential (wraps the AWS IAM role that can read the token secret).
+    default: ""
+  llm_secret_arn:
+    description: AWS Secrets Manager secret ARN (or name) holding the gateway token.
+    default: ""
+  llm_secret_region:
+    description: AWS region of the token secret.
+    default: "us-west-2"
+  llm_secret_json_key:
+    description: If the secret is JSON, the key holding the token (empty = the secret string IS the token).
+    default: "token"
+  agent_mode:
+    # WHERE the investigation runs. ALL modes: the APP is always the orchestrator + state owner, the tools run
+    # AS A MEMBER of the AIA role group — inheriting its evidence SELECT / tool EXECUTE grants, no
+    # token mint and no secret — and the app reconciles orphaned 'running' rows on startup (app/reconcile.py).
+    # Only the compute + how the verdict comes back differ.
+    #   job_warehouse (DEFAULT) — the app fires the investigate job via jobs.run_now; the job runs as a
+    #     dedicated JOB SP (var.job_sp, a role member) and runs the UC-function TOOLs on the WAREHOUSE
+    #     (var.warehouse_id) via WarehouseSqlRunner (the job's Spark session stays idle). It appends its verdict
+    #     to the append-only journal in Lakebase (lib/journal.py) — no callback. Recovery = reconcile via the
+    #     job run id. Durable (platform-supervised) with no per-case Spark spin-up.
+    #   job — identical to job_warehouse from the app's side, but the job runs the tools on its OWN Spark
+    #     session (SparkSqlRunner) instead of the warehouse. Use when you want the investigation on Spark.
+    #   in_process — the app runs the pure investigation itself, in a background thread, running the tools on
+    #     the warehouse with its OWN app-SP identity (also a role member, with warehouse CAN_USE granted
+    #     directly); owning Lakebase, it writes the verdict straight through record_verdict. Recovery = re-run
+    #     the orphaned row. Use for quick loops within the app's uptime; needs no job SP.
+    description: Where investigations run — job_warehouse (job SP; warehouse tools; DEFAULT) | job (job SP; Spark tools) | in_process (app SP; warehouse tools).
+    default: "job_warehouse"
+  job_sp:
+    description: >-
+      JOB MODE ONLY — the dedicated JOB service principal (application/client id) the investigate job runs
+      as. It is a MEMBER of the AIA role group (so it INHERITS the role's evidence/tool grants — no assume, no
+      secret). It reports by appending to the append-only journal (INSERT-only on investigation_events); it
+      needs NO app permission at all (no callback, no CAN_USE on the app). No OAuth secret is stored anywhere.
+      Admin pre-allocates it + its group membership; the deployer needs
+      `servicePrincipal.user` on it to set it as run_as. NOT needed for in_process.
+      Default "none" (not empty): the app's AIA_JOB_SP env var can't be empty (Databricks Apps rejects an
+      env var with no value), and the backend treats "none"/"" as unset. Job mode overrides with the real id.
+    default: "none"
+  investigate_max_retries:
+    description: >-
+      JOB MODE — how many times Databricks retries the investigate TASK within one job run on a transient
+      failure (LLM 503, tool timeout). This is the durable-runner retry: the platform re-runs the SAME job run
+      (job_run_id is stable across task retries), so the app's authenticity binding still holds. The notebook
+      appends a 'failed' journal event ONLY on the final attempt (execution_count > max_retries), so a run
+      that fails-then-succeeds reports exactly one terminal event (see src/investigate.py). This value is
+      fed BOTH to the task's max_retries AND to the notebook (as the `max_retries` param) from this one var, so
+      they can't drift. Separate from the app's AIA_MAX_ATTEMPTS (which bounds ORPHAN re-fires on restart).
+    default: 2
+  investigate_timeout_seconds:
+    description: >-
+      JOB MODE — per-ATTEMPT wall-clock bound on the investigate task. Without it a wedged attempt (a hung LLM
+      call or a tool query that never returns) sits RUNNING forever and never becomes FAILED, so max_retries
+      never fires (a retry needs an observable failure) and only an app restart + reconcile clears it. With it,
+      Databricks TIMES OUT the stuck attempt → FAILED; paired with retry_on_timeout the timed-out attempt then
+      counts toward max_retries and the run retries. So the run-level bound is roughly
+      (max_retries + 1) × timeout_seconds — pick this as the per-attempt budget, not the whole-run budget.
+      An autonomous multi-tool LLM investigation is minutes, not seconds; 1800s (30 min) is a generous ceiling
+      that still guarantees termination. Set 0 to disable (no bound) — not recommended.
+    default: 1800
+
+targets:
+  # Staging — where AIA stands the environment up, wires in AWS Secrets + Tines, and does test runs
+  # (the walkthrough's step 1). `mode: development` so an authorized engineer can run setup.py / bundle
+  # deploy by hand here. Point this at your staging workspace's CLI profile.
+  stage:
+    mode: development
+    default: true
+    workspace:
+      profile: stage
+
+  # Production — deployed by CI/CD on merge to master (see .github/workflows/deploy.yml), as a service
+  # principal via OAuth. Many orgs allow app/job deploys to prod ONLY through CI — this target is built
+  # for that (see README "Locking prod deploys to CI/CD").
+  prod:
+    mode: production
+    workspace:
+      profile: prod
+      # CI deploys land in a stable shared path (not a user home) so the SP owns them. deploy_suffix is ""
+      # in prod (→ the single shared root); the e2e harness sets it per test suffix to isolate parallel runs.
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}${var.deploy_suffix}
+    # run_as is set in CI via --var or an env-specific override; left to the deploying identity by default.
+
+resources:
+  jobs:
+    # ── ONE-TIME SETUP job (run manually via scripts/setup.py, NOT by CI/CD) ─────────────────────────
+    # build_structure creates ONLY the Lakebase cases/investigations tables — the one piece of structure
+    # prod needs (it's OUR schema, not AIA's data). Its definition ships here, but CI/CD never *runs* it
+    # (see README "Deployment lifecycle"). The DEMO seed (Delta substrate + UC-function tools + 25 demo
+    # cases) is NOT in this product bundle — it lives in the separate demo/ bundle, deployed & run by a
+    # test-only seeder SP. AIA's real prod never seeds (they already have their own tables + tools + data).
+    build_structure:
+      name: "[${bundle.target}] AIA · 01 Build structure (Lakebase cases/investigations) — one-time"
+      tasks:
+        - task_key: build_structure
+          notebook_task:
+            notebook_path: ./src/build_structure.py
+            base_parameters:
+              schema: ${var.schema}
+              lakebase_project: ${var.lakebase_project}
+              lakebase_branch: ${var.lakebase_branch}
+              lakebase_endpoint: ${var.lakebase_endpoint}
+              pg_database: ${var.pg_database}
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - pg8000
+              # the aia-lib wheel (artifacts.aia_lib) — provides lib.* to the job; installed from site-
+              # packages, so no /Workspace FUSE read. Glob is relative to databricks.yml (repo root → ./dist).
+              - ./dist/*.whl
+
+    # ── CODE resource (definition deploys via CI/CD; triggered per-case by the app at runtime) ──────
+    investigate:
+      name: "[${bundle.target}] AIA · Investigate case (autonomous agent)"
+      # Runs as the dedicated JOB SP (job mode only). The job SP is a MEMBER of the AIA role group, so it
+      # INHERITS the role's evidence SELECT / tool EXECUTE grants — tool queries run through its own Spark
+      # session with no token mint and no secret. It reports its verdict by appending to the append-only
+      # journal in Lakebase (investigation_events; INSERT-only), which the app reconciles into state — so it
+      # needs NO app permission and no callback. The deployer needs `servicePrincipal.user` on job_sp to set
+      # it here. Admin pre-allocates the job SP + its group membership.
+      #
+      # run_as is intentionally NOT set in this base. In in_process mode the job is never triggered, so it
+      # defaults to the deploying identity (DAB fills it correctly whether the deployer is a user or an SP).
+      # In JOB mode the generated config.yml adds a resource overlay setting run_as to the job SP (see
+      # tests/harness/render_config.py). A bundle can't conditionally omit run_as, and an empty
+      # service_principal_name is rejected at deploy — so the override lives in the per-mode config.yml.
+      # Triggered per-case by the app via jobs.run_now, which passes the case CONTENT + investigation_id
+      # as job_parameters (the agent has no Lakebase access, so the app supplies the case, not a lookup).
+      # These job-level parameters must be DECLARED for job_parameters overrides to reach the notebook.
+      parameters:
+        - name: case_id
+          default: ""
+        - name: investigation_id
+          default: ""
+        - name: case_title
+          default: ""
+        - name: case_description
+          default: ""
+        - name: case_severity
+          default: ""
+        - name: case_indicator_value
+          default: ""
+        - name: case_indicator_type
+          default: ""
+        - name: case_account_id
+          default: ""
+        - name: case_scenario_label
+          default: ""
+      tasks:
+        - task_key: investigate
+          notebook_task:
+            notebook_path: ./src/investigate.py
+            base_parameters:
+              # static config from the bundle:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              # Which SQL backend the TOOLS run on. `job` → the notebook's own Spark session (SparkSqlRunner).
+              # `job_warehouse` → the warehouse below via the SQL Statement Execution API (WarehouseSqlRunner),
+              # so the job never touches `spark`; the job SP (a role member) inherits the role's warehouse
+              # CAN_USE. warehouse_id is only read in job_warehouse mode (empty/unused for plain job).
+              agent_mode: ${var.agent_mode}
+              warehouse_id: ${var.warehouse_id}
+              # LLM gateway: plain URL + AWS-Secrets-Manager token via a UC service credential (lib/llm.py).
+              llm_endpoint_url: ${var.llm_endpoint_url}
+              llm_service_credential: ${var.llm_service_credential}
+              llm_secret_arn: ${var.llm_secret_arn}
+              llm_secret_region: ${var.llm_secret_region}
+              llm_secret_json_key: ${var.llm_secret_json_key}
+              # Lakebase coordinates — where the JOURNAL lives (the job's only write target).
+              lakebase_project: ${var.lakebase_project}
+              lakebase_branch: ${var.lakebase_branch}
+              lakebase_endpoint: ${var.lakebase_endpoint}
+              pg_database: ${var.pg_database}
+              # {{job.run_id}} is a PLATFORM dynamic reference — Databricks substitutes the real run id at
+              # launch and the job cannot forge it. Every journal event carries it, and the app applies an
+              # event only if it matches the run id it recorded at jobs.run_now. That's the authenticity
+              # binding, with nothing minted or stored (see lib/journal.py). Note it is NOT a job parameter:
+              # taking it from the app would defeat the point — the platform must be the one asserting it.
+              job_run_id: "{{job.run_id}}"
+              # Task-retry accounting (durable-runner retries). task.execution_count is the platform-injected
+              # 1-based attempt number (first try=1, first retry=2, …); max_retries is ${var.investigate_max_retries}
+              # — the SAME value set on the task's max_retries below (fed from one var so they can't drift). The
+              # notebook computes is_final = execution_count > max_retries and appends a 'failed' journal event
+              # ONLY on the final attempt, so a fail-then-succeed run reports exactly one terminal event.
+              task_execution_count: "{{task.execution_count}}"
+              max_retries: ${var.investigate_max_retries}
+              # per-run values from the app's job_parameters (wired through by name). The job SP inherits the
+              # tool grants by group membership, so tools run on its own Spark — no warehouse / assume_group.
+              case_id: "{{job.parameters.case_id}}"
+              investigation_id: "{{job.parameters.investigation_id}}"
+              case_title: "{{job.parameters.case_title}}"
+              case_description: "{{job.parameters.case_description}}"
+              case_severity: "{{job.parameters.case_severity}}"
+              case_indicator_value: "{{job.parameters.case_indicator_value}}"
+              case_indicator_type: "{{job.parameters.case_indicator_type}}"
+              case_account_id: "{{job.parameters.case_account_id}}"
+              case_scenario_label: "{{job.parameters.case_scenario_label}}"
+          environment_key: default
+          # Durable-runner retries: Databricks re-runs THIS TASK within the same job run on a transient
+          # failure. job_run_id is stable across these attempts, so the app's authenticity binding holds and
+          # reconcile is unaffected (still owns only orphans/crashes). The notebook reports 'failed' to the
+          # journal only on the final attempt (see task_execution_count + max_retries params above). Same value
+          # as the max_retries base_parameter — both from ${var.investigate_max_retries}.
+          max_retries: ${var.investigate_max_retries}
+          # Per-attempt wall-clock bound: a hung attempt (stuck LLM/tool) would otherwise sit RUNNING forever
+          # and never become FAILED, so max_retries would never fire (retries need an observable failure) and
+          # only an app-restart reconcile would clear it. timeout_seconds makes Databricks TIME OUT the stuck
+          # attempt; retry_on_timeout=true then counts it toward max_retries so the run retries the hang, and
+          # a genuine final timeout surfaces as FAILED (→ one 'failed' journal event on the final attempt).
+          timeout_seconds: ${var.investigate_timeout_seconds}
+          retry_on_timeout: true
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - mlflow
+              # pg8000 — the job appends to the append-only JOURNAL (investigation_events). That is its ONLY
+              # database surface: INSERT on that table, no reads, no access to cases/investigations. See
+              # lib/journal.py. (It replaced the HTTP verdict callback, which needed no driver but did need
+              # token-exchange + an app endpoint + caller validation.)
+              - pg8000
+              # boto3 — fetch the LLM gateway token from AWS Secrets Manager (STS creds from the UC service
+              # credential; see lib/llm.py). Installs on serverless via the internal PyPI proxy (no C ext).
+              - boto3
+              # aia-lib wheel (artifacts.aia_lib) — provides lib.* (orchestrator, journal, llm, pg, …) from
+              # site-packages, so the agent never reads lib/*.py off the /Workspace FUSE mount.
+              - ./dist/*.whl
+
+  apps:
+    # `aia_app` is the bundle RESOURCE KEY (what `bundle run aia_app` references — a static code id, not
+    # configurable). The app's NAME (below) is the configurable `app_name` variable.
+    aia_app:
+      name: ${var.app_name}
+      description: "AIA medium-threat investigation — Tines-facing API + live case UI (reads Lakebase)."
+      # Ship the whole repo root so the shared `lib/` package deploys alongside the app (a Databricks
+      # App can only import files under its source_code_path — a sibling ../lib wouldn't be uploaded).
+      # This keeps lib/ a single committed source of truth: no generated copy, no pre-deploy sync step.
+      # The app runs with the repo root as its working dir, so the module path is `app.main` and
+      # investigations.py imports `from lib.pg import ...`. (src/ and demo/ ride along unused — harmless.)
+      source_code_path: .
+      config:
+        command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+        # ALL env below is STATIC (names AIA chose up front). The app resolves the post-deploy values
+        # (its SP id, the Lakebase host/endpoint, the investigate job id) at startup — see lib/resolve.py
+        # and app/backend.py — so there is nothing to fill in after deploy and no redeploy.
+        env:
+          - name: AIA_CATALOG
+            value: ${var.catalog}
+          - name: AIA_SCHEMA
+            value: ${var.schema}
+          # Where investigations run (in_process | job | job_warehouse). The app routes trigger + reconcile
+          # on this; job and job_warehouse are identical from the app's side (see backend.py JOB_MODES).
+          - name: AIA_AGENT_MODE
+            value: ${var.agent_mode}
+          # The warehouse UC-function TOOLs run on. In in_process the APP runs them here as its OWN app-SP
+          # identity (a role member with warehouse CAN_USE granted directly); in job_warehouse the JOB runs
+          # them on the warehouse; in `job` the job uses Spark. State reads come from Lakebase, not this.
+          - name: AIA_WAREHOUSE_ID
+            value: ${var.warehouse_id}
+          # The Lakebase project + branch/endpoint — the app derives the Postgres host + endpoint path
+          # from these at startup.
+          - name: AIA_LAKEBASE_PROJECT
+            value: ${var.lakebase_project}
+          - name: AIA_LAKEBASE_BRANCH
+            value: ${var.lakebase_branch}
+          - name: AIA_LAKEBASE_ENDPOINT
+            value: ${var.lakebase_endpoint}
+          - name: AIA_PG_DATABASE
+            value: ${var.pg_database}
+          # The investigate job's NAME (unique per workspace via the target prefix); the app looks up its
+          # id by this name at trigger time. Keep in sync with resources.jobs.investigate.name.
+          - name: AIA_INVESTIGATE_JOB_NAME
+            value: "[${bundle.target}] AIA · Investigate case (autonomous agent)"
+          # The app's OWN name — keep in sync with resources.apps.aia_app.name.
+          - name: AIA_APP_NAME
+            value: ${var.app_name}
+          # LLM gateway (lib/llm.py): plain URL + a token fetched from AWS Secrets Manager via the UC service
+          # credential the app SP holds ACCESS on. No secret scope. (Local/tests can override with
+          # AIA_LLM_ENDPOINT_URL + AIA_LLM_TOKEN, in which case AWS is skipped entirely.)
+          - name: AIA_LLM_ENDPOINT_URL
+            value: ${var.llm_endpoint_url}
+          - name: AIA_LLM_SERVICE_CREDENTIAL
+            value: ${var.llm_service_credential}
+          - name: AIA_LLM_SECRET_ARN
+            value: ${var.llm_secret_arn}
+          - name: AIA_LLM_SECRET_REGION
+            value: ${var.llm_secret_region}
+          - name: AIA_LLM_SECRET_JSON_KEY
+            value: ${var.llm_secret_json_key}
+          # The JOB SP's client id (job mode). The app uses it ONLY to stamp `investigated_by` on the
+          # investigation row for audit — there is no inbound call to authenticate (the job reports via the
+          # append-only journal, and event authenticity comes from the platform-injected {{job.run_id}}
+          # matching the run id the app recorded at jobs.run_now — see lib/journal.py).
+          # Defaults to "none" (not empty) because Databricks Apps rejects an env var with no value; the
+          # backend treats "none"/"" as unset (in_process never reads it). See var.job_sp default.
+          - name: AIA_JOB_SP
+            value: ${var.job_sp}

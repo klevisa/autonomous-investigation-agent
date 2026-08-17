@@ -1,0 +1,19 @@
+# The APP's dependencies (FastAPI service). This lives at the REPO ROOT — not in app/ — because that is the
+# app's source_code_path (databricks.yml: `source_code_path: .`), and Databricks Apps run
+# `pip install -r requirements.txt` from the root of the source path. The root is the source path so the app
+# can import the shared `lib/` package from source (a sibling ../lib wouldn't be uploaded). This file is NOT
+# a project-wide manifest — the other two dep sets live elsewhere: the JOBS declare theirs inline in
+# databricks.yml (environments.dependencies, incl. the aia_lib wheel), and the local setup CLI in
+# aia_ops/requirements.txt. lib/'s own deps are declared in pyproject.toml (the wheel).
+#
+# fastapi + uvicorn are the app's OWN deps; pg8000/boto3/databricks-sdk are lib/'s deps, listed here too so
+# the app container has them (the app imports lib/ from source, so it doesn't get lib/'s wheel-declared deps).
+fastapi
+uvicorn[standard]
+# >=0.98: in_process mode calls WorkspaceClient.credentials.generate_temporary_service_credential to fetch the
+# LLM token from AWS Secrets Manager (lib/llm.py). The `credentials` API is recent — an unpinned SDK installed
+# an older build lacking it ("'WorkspaceClient' object has no attribute 'credentials'"), failing every
+# in_process investigation. Job mode was unaffected (serverless ships a newer SDK). Pin the floor.
+databricks-sdk>=0.98.0
+pg8000
+boto3

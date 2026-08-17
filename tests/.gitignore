@@ -1,0 +1,7 @@
+# Never commit filled-in test config (holds SP client ids, account id, secret ARNs, workspace catalogs,
+# repo) or run artifacts. Only config.env.example (the sanitized template) ships.
+config/config.env
+config/config.*.env
+!config/config.env.example
+**/.run/
+*.log

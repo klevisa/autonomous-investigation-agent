@@ -1,0 +1,40 @@
+# AIA bundle config — per-environment variable values.  COPY THIS FILE TO `config.yml` AND FILL IT IN.
+#
+# `config.yml` is gitignored (this repo is a template and carries no environment values). The bundle picks it
+# up via the `config*.yml` glob in databricks.yml, so `bundle deploy` and the `scripts/*.py` recipes read
+# these directly. (This example keeps its `.example` suffix so the glob does NOT include it.)
+#
+# STAGING you hand-write here. PRODUCTION values are NOT hand-written — they live as GitHub Actions repo
+# variables (PROD_*) and CI assembles the prod block from them (scripts/setup_cicd.py + the deploy workflow),
+# so prod has a single source of truth. See the README "Going to production with CI/CD".
+
+targets:
+  stage:
+    variables:
+      # ── Data plane (Unity Catalog / Delta) ──────────────────────────────────────────────────────────
+      catalog:            your_catalog        # UC catalog holding the evidence tables + tool functions (look up)
+      schema:             aia_stage          # schema of the tools/evidence — LOOK UP; may already exist. The
+                                              #   same name is reused for the Lakebase schema (created for you).
+      warehouse_id:       0123456789abcdef    # SQL warehouse the tools run on (`databricks warehouses list`)
+
+      # ── State plane (Lakebase) ──────────────────────────────────────────────────────────────────────
+      lakebase_project:   aia-lakebase       # created for you if it doesn't exist
+      pg_database:        aia_stage          # database name — use a DISTINCT name per environment
+
+      # ── Identity ────────────────────────────────────────────────────────────────────────────────────
+      agent_mode:         job_warehouse       # job_warehouse (default) | job | in_process
+      job_sp:             <job-sp-client-id>  # the pre-provisioned job SP (a member of the role); job modes only
+
+      # ── LLM gateway (token in AWS Secrets Manager, via a UC service credential) ──────────────────────
+      llm_endpoint_url:            https://<workspace-host>/serving-endpoints/<endpoint>/invocations
+      llm_service_credential:      aia-llm-aws-secrets    # the UC service-credential NAME
+      llm_secret_arn:              arn:aws:secretsmanager:us-west-2:<acct>:secret:aia/llm-token-XXXXXX
+      llm_secret_region:           us-west-2               # optional (default us-west-2)
+      llm_secret_json_key:         token                   # optional (empty = the secret string IS the token)
+
+      # ── Optional tuning (job modes) ─────────────────────────────────────────────────────────────────
+      # investigate_max_retries:     2         # task retries on a transient failure
+      # investigate_timeout_seconds: 1800      # per-attempt wall-clock bound, seconds
+      # app_name:                    aia-investigation-app
+
+  # prod: assembled by CI from the GitHub Actions PROD_* variables — do NOT hand-write it here.

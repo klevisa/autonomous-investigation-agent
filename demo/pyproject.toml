@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aia-demo-lib"
+# Placeholder — the REAL version is injected at build time by the bundle's `dynamic_version: true`
+# (databricks.yml artifacts.aia_demo_lib), so a changed lib/ or demo_substrate always yields a new wheel
+# filename and serverless never serves a stale cached library. Same pattern as the product's aia-lib.
+version = "0.0.0"
+description = "AIA demo-data wheel — the shared lib/ (for lib.common/pg/resolve) + the demo substrate registry, packaged so the demo bundle is fully self-contained and never shares the product's aia-lib wheel."
+requires-python = ">=3.10"
+# What the seed notebook's lib.* imports pull in at runtime (lib/pg.py → pg8000; lib/resolve.py + the SDK).
+dependencies = [
+  "databricks-sdk>=0.98.0",
+  "pg8000",
+]
+
+[tool.hatch.build.targets.wheel]
+# Self-contained by design: force-include the repo's lib/ package (one dir up) for lib.common/pg/resolve, and
+# the local demo_substrate module. So this wheel carries everything demo/src/seed_demo_data.py imports —
+# it never depends on the product bundle's wheel or its artifacts path (that was the cross-SP friction we
+# avoided by giving the seeder its own bundle). Verified: `python -m build --wheel` packages both.
+force-include = { "../lib" = "lib", "demo_substrate.py" = "demo_substrate.py" }

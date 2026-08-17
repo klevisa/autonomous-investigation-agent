@@ -1,0 +1,34 @@
+.databricks/
+__pycache__/
+*.pyc
+.venv/
+.env
+*.egg-info/
+.DS_Store
+.vscode/
+
+# Per-environment bundle values are NOT committed — the repo is a template. CI supplies them as --var
+# from GitHub Actions repository *variables* (they're non-secret names), and setup.sh writes a local
+# config.yml for manual runs. See README "How CI/CD gets its values" + .github/workflows/deploy.yml.
+config.yml
+# (harness env configs — tests/config/config*.env — are ignored in tests/.gitignore)
+
+# Python wheel build output (aia-lib; built at deploy time)
+dist/
+build/
+*.egg-info/
+
+# Internal scratch notes kept purely local (never committed even to the private repo). Durable internal
+# docs live under docs/ instead — tracked in the private repo, excluded from the public repo via
+# .gitattributes export-ignore (see scripts/publish_public.py). Only README.md ships as documentation.
+todo.md
+CLEANUP_permission_test.md
+docs/NEXT.md
+docs/STATUS.md
+docs/CICD-CHECKLIST.md
+
+# test env + caches
+.venv/
+.pytest_cache/
+__pycache__/
+.isaac/

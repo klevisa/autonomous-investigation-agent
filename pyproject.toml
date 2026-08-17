@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aia-lib"
+# Version is a placeholder — the REAL version is injected at build time by scripts/deploy.sh
+# (`--config-settings` / env), derived from content: the git short-sha when the tree is clean (CI + clean
+# local deploys → traceable to a commit), or a hash of lib/*.py when there are uncommitted edits (local
+# iteration → busts the serverless wheel cache on every change). See scripts/deploy.sh wheel_version().
+version = "0.0.0"
+description = "AIA shared library (agent orchestrator, journal, state store, LLM + UC helpers) — installed into the investigate jobs as a wheel so serverless never reads lib/*.py off the flaky /Workspace FUSE mount."
+requires-python = ">=3.10"
+# lib/'s own runtime deps — declared so the wheel is self-describing (`pip install aia-lib` pulls them).
+#   databricks-sdk>=0.98.0: lib/llm.py calls w.credentials.generate_temporary_service_credential (AWS
+#     Secrets token); that API needs the same floor the app pins for the same reason.
+#   pg8000: lib/pg.py (Lakebase Postgres).   boto3: lib/llm.py AWS Secrets Manager path.
+# mlflow is NOT here on purpose — lib/tool_wielding_agent.py treats it as soft-optional (import guarded by
+# try/except; tracing is skipped if absent), so it stays an environment concern, not a hard wheel dep.
+dependencies = [
+  "databricks-sdk>=0.98.0",
+  "pg8000",
+  "boto3",
+]
+
+[tool.hatch.build.targets.wheel]
+# lib/ is the package (a flat module set under lib/). Ship exactly that.
+packages = ["lib"]

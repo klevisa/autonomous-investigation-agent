@@ -1,0 +1,481 @@
+action_id,account_id,action_type,reason_summary,taken_by,taken_at,related_investigation_id
+ACT-00001,ACC-000633,manual_review,Insider activity response — resolved after review.,m.chen,2026-02-28 05:43:09,INV-00104
+ACT-00002,ACC-000476,manual_review,Multiple high-severity signals — awaiting customer response.,r.kowalski,2026-02-09 21:21:30,
+ACT-00003,ACC-000500,forced_password_reset,Multiple high-severity signals — resolved after review.,r.kowalski,2026-05-08 13:52:02,
+ACT-00004,ACC-001998,forced_password_reset,Policy violation — awaiting customer response.,s.delgado,2026-05-26 21:06:00,
+ACT-00005,ACC-001349,mfa_enforced,Account takeover response — pending verification.,s.delgado,2026-02-08 11:48:19,INV-00248
+ACT-00006,ACC-001312,session_revoked,Customer-reported compromise — temporary protective measure.,m.chen,2026-02-24 17:34:38,
+ACT-00007,ACC-001009,account_suspended,Malware delivery response — pending verification.,p.novak,2026-04-05 13:38:18,INV-00067
+ACT-00008,ACC-000656,external_sharing_disabled,Data exfiltration response — pending verification.,t.ibrahim,2026-02-03 01:08:44,INV-00159
+ACT-00009,ACC-001218,account_suspended,Linked to active campaign — pending verification.,r.kowalski,2026-04-02 16:52:15,
+ACT-00010,ACC-001398,session_revoked,Linked to active campaign — resolved after review.,m.chen,2026-04-27 02:59:40,
+ACT-00011,ACC-000213,manual_review,Data exfiltration response — temporary protective measure.,c.ramirez,2026-04-13 17:27:02,INV-00131
+ACT-00012,ACC-000093,manual_review,Phishing wave response — resolved after review.,t.ibrahim,2026-02-16 23:10:59,INV-00267
+ACT-00013,ACC-001914,session_revoked,Account takeover response — temporary protective measure.,r.kowalski,2026-02-21 09:32:04,INV-00009
+ACT-00014,ACC-000991,external_sharing_disabled,Data exfiltration response — resolved after review.,m.chen,2026-02-09 14:24:02,INV-00280
+ACT-00015,ACC-000372,manual_review,Phishing wave response — pending verification.,a.okafor,2026-02-03 02:29:34,INV-00319
+ACT-00016,ACC-001792,session_revoked,Elevated risk score — resolved after review.,t.ibrahim,2026-05-29 14:56:12,
+ACT-00017,ACC-001857,rate_limited,Multiple high-severity signals — awaiting customer response.,s.delgado,2026-04-07 11:04:33,
+ACT-00018,ACC-001846,rate_limited,Credential stuffing response — pending verification.,r.kowalski,2026-03-06 14:57:23,INV-00216
+ACT-00019,ACC-001325,forced_password_reset,Multiple high-severity signals — resolved after review.,s.delgado,2026-04-03 07:06:32,
+ACT-00020,ACC-001601,manual_review,Data exfiltration response — temporary protective measure.,c.ramirez,2026-02-16 03:10:07,INV-00142
+ACT-00021,ACC-000023,external_sharing_disabled,Data exfiltration response — pending verification.,j.fletcher,2026-04-12 21:15:13,INV-00266
+ACT-00022,ACC-000594,forced_password_reset,Elevated risk score — awaiting customer response.,c.ramirez,2026-04-17 10:12:08,
+ACT-00023,ACC-001637,external_sharing_disabled,Customer-reported compromise — resolved after review.,m.chen,2026-04-30 07:56:01,
+ACT-00024,ACC-000997,external_sharing_disabled,Data exfiltration response — resolved after review.,c.ramirez,2026-02-02 07:41:07,INV-00021
+ACT-00025,ACC-001521,manual_review,Elevated risk score — resolved after review.,c.ramirez,2026-03-27 05:12:26,
+ACT-00026,ACC-001711,forced_password_reset,Linked to active campaign — awaiting customer response.,s.delgado,2026-02-05 14:34:26,
+ACT-00027,ACC-001917,external_sharing_disabled,Insider activity response — temporary protective measure.,r.kowalski,2026-05-28 17:34:44,INV-00042
+ACT-00028,ACC-001144,external_sharing_disabled,Multiple high-severity signals — temporary protective measure.,r.kowalski,2026-05-28 18:59:52,
+ACT-00029,ACC-001417,session_revoked,Api token abuse response — temporary protective measure.,a.okafor,2026-03-10 01:06:48,INV-00297
+ACT-00030,ACC-001244,session_revoked,Account takeover response — temporary protective measure.,c.ramirez,2026-02-01 11:43:49,INV-00036
+ACT-00031,ACC-001806,session_revoked,Account takeover response — resolved after review.,p.novak,2026-04-28 09:31:35,INV-00122
+ACT-00032,ACC-000998,account_suspended,Data exfiltration response — pending verification.,p.novak,2026-03-14 05:17:10,INV-00142
+ACT-00033,ACC-001409,forced_password_reset,Credential stuffing response — pending verification.,p.novak,2026-05-24 21:18:43,INV-00145
+ACT-00034,ACC-001471,mfa_enforced,Elevated risk score — pending verification.,m.chen,2026-03-12 05:39:42,
+ACT-00035,ACC-000263,external_sharing_disabled,Linked to active campaign — pending verification.,j.fletcher,2026-05-24 13:22:40,
+ACT-00036,ACC-001502,external_sharing_disabled,Policy violation — resolved after review.,t.ibrahim,2026-04-02 09:15:05,
+ACT-00037,ACC-001862,session_revoked,Account takeover response — temporary protective measure.,s.delgado,2026-02-09 03:48:48,INV-00135
+ACT-00038,ACC-000251,account_suspended,Malware delivery response — resolved after review.,p.novak,2026-05-27 11:43:51,INV-00249
+ACT-00039,ACC-001465,manual_review,Phishing wave response — temporary protective measure.,j.fletcher,2026-05-10 01:14:24,INV-00270
+ACT-00040,ACC-001240,account_suspended,Linked to active campaign — awaiting customer response.,t.ibrahim,2026-05-20 04:50:47,
+ACT-00041,ACC-000940,manual_review,Phishing wave response — pending verification.,t.ibrahim,2026-05-28 21:35:29,INV-00270
+ACT-00042,ACC-001554,manual_review,Insider activity response — pending verification.,c.ramirez,2026-05-04 12:50:01,INV-00317
+ACT-00043,ACC-001256,manual_review,Data exfiltration response — resolved after review.,c.ramirez,2026-05-01 13:08:30,INV-00120
+ACT-00044,ACC-000555,manual_review,Data exfiltration response — pending verification.,t.ibrahim,2026-05-24 04:27:07,INV-00103
+ACT-00045,ACC-000855,account_suspended,Malware delivery response — pending verification.,a.okafor,2026-04-27 11:58:01,INV-00194
+ACT-00046,ACC-000128,cleared_no_action,Linked to active campaign — temporary protective measure.,t.ibrahim,2026-02-06 16:08:10,
+ACT-00047,ACC-001256,forced_password_reset,Linked to active campaign — awaiting customer response.,r.kowalski,2026-04-27 06:32:01,
+ACT-00048,ACC-000104,manual_review,Benign response — pending verification.,c.ramirez,2026-05-22 02:25:37,INV-00282
+ACT-00049,ACC-000009,mfa_enforced,Phishing wave response — temporary protective measure.,c.ramirez,2026-02-22 18:37:12,INV-00319
+ACT-00050,ACC-001734,forced_password_reset,Elevated risk score — awaiting customer response.,p.novak,2026-03-18 21:07:34,
+ACT-00051,ACC-001561,account_suspended,Policy violation — resolved after review.,m.chen,2026-02-25 00:03:24,
+ACT-00052,ACC-001601,manual_review,Benign response — pending verification.,p.novak,2026-04-04 02:26:33,INV-00064
+ACT-00053,ACC-000192,session_revoked,Account takeover response — resolved after review.,m.chen,2026-03-18 10:57:43,INV-00005
+ACT-00054,ACC-000939,external_sharing_disabled,Insider activity response — pending verification.,s.delgado,2026-05-31 07:45:21,INV-00279
+ACT-00055,ACC-001344,session_revoked,Api token abuse response — resolved after review.,r.kowalski,2026-03-06 10:05:05,INV-00233
+ACT-00056,ACC-001806,manual_review,Benign response — temporary protective measure.,t.ibrahim,2026-02-07 23:19:02,INV-00138
+ACT-00057,ACC-001997,external_sharing_disabled,Elevated risk score — awaiting customer response.,r.kowalski,2026-05-23 11:16:03,
+ACT-00058,ACC-000372,manual_review,Benign response — pending verification.,p.novak,2026-03-16 19:47:22,INV-00296
+ACT-00059,ACC-001127,account_suspended,Data exfiltration response — resolved after review.,a.okafor,2026-04-04 10:09:29,INV-00065
+ACT-00060,ACC-000133,mfa_enforced,Elevated risk score — pending verification.,a.okafor,2026-02-13 20:53:11,
+ACT-00061,ACC-001929,rate_limited,Credential stuffing response — temporary protective measure.,j.fletcher,2026-03-14 09:01:07,INV-00160
+ACT-00062,ACC-001996,mfa_enforced,Account takeover response — temporary protective measure.,s.delgado,2026-03-20 09:34:10,INV-00165
+ACT-00063,ACC-000981,forced_password_reset,Account takeover response — resolved after review.,r.kowalski,2026-04-22 23:32:27,INV-00232
+ACT-00064,ACC-000299,forced_password_reset,Customer-reported compromise — temporary protective measure.,c.ramirez,2026-02-12 03:01:15,
+ACT-00065,ACC-001346,forced_password_reset,Credential stuffing response — temporary protective measure.,m.chen,2026-04-03 01:15:49,INV-00140
+ACT-00066,ACC-000747,external_sharing_disabled,Insider activity response — temporary protective measure.,p.novak,2026-05-04 22:50:52,INV-00187
+ACT-00067,ACC-000252,forced_password_reset,Account takeover response — temporary protective measure.,c.ramirez,2026-05-18 06:36:52,INV-00045
+ACT-00068,ACC-000269,session_revoked,Phishing wave response — pending verification.,p.novak,2026-03-19 21:20:32,INV-00151
+ACT-00069,ACC-000594,rate_limited,Credential stuffing response — temporary protective measure.,p.novak,2026-03-06 18:51:03,INV-00098
+ACT-00070,ACC-000879,account_suspended,Data exfiltration response — temporary protective measure.,r.kowalski,2026-02-06 15:15:16,INV-00156
+ACT-00071,ACC-001282,account_suspended,Malware delivery response — temporary protective measure.,p.novak,2026-03-24 18:29:20,INV-00206
+ACT-00072,ACC-001443,forced_password_reset,Credential stuffing response — pending verification.,j.fletcher,2026-06-01 16:38:10,INV-00197
+ACT-00073,ACC-000567,mfa_enforced,Account takeover response — pending verification.,c.ramirez,2026-03-22 21:21:52,INV-00059
+ACT-00074,ACC-001258,rate_limited,Api token abuse response — pending verification.,t.ibrahim,2026-02-02 01:58:21,INV-00029
+ACT-00075,ACC-001017,session_revoked,Account takeover response — temporary protective measure.,j.fletcher,2026-03-02 21:49:38,INV-00193
+ACT-00076,ACC-000079,forced_password_reset,Elevated risk score — resolved after review.,j.fletcher,2026-05-19 11:46:10,
+ACT-00077,ACC-000418,manual_review,Phishing wave response — pending verification.,c.ramirez,2026-03-27 08:20:50,INV-00136
+ACT-00078,ACC-000030,manual_review,Benign response — pending verification.,t.ibrahim,2026-05-15 17:11:14,INV-00055
+ACT-00079,ACC-000374,session_revoked,Phishing wave response — pending verification.,p.novak,2026-05-31 14:30:31,INV-00030
+ACT-00080,ACC-000648,rate_limited,Customer-reported compromise — pending verification.,s.delgado,2026-04-10 16:45:25,
+ACT-00081,ACC-000257,session_revoked,Phishing wave response — temporary protective measure.,r.kowalski,2026-04-26 17:39:04,INV-00069
+ACT-00082,ACC-000357,manual_review,Phishing wave response — resolved after review.,r.kowalski,2026-03-08 03:40:34,INV-00149
+ACT-00083,ACC-000432,external_sharing_disabled,Insider activity response — pending verification.,m.chen,2026-03-18 07:59:49,INV-00129
+ACT-00084,ACC-000976,external_sharing_disabled,Elevated risk score — awaiting customer response.,t.ibrahim,2026-03-31 23:26:26,
+ACT-00085,ACC-001914,manual_review,Customer-reported compromise — temporary protective measure.,r.kowalski,2026-04-25 01:07:29,
+ACT-00086,ACC-000134,mfa_enforced,Account takeover response — temporary protective measure.,t.ibrahim,2026-03-18 04:24:53,INV-00306
+ACT-00087,ACC-000403,account_suspended,Malware delivery response — resolved after review.,r.kowalski,2026-03-09 15:17:52,INV-00115
+ACT-00088,ACC-000631,account_suspended,Policy violation — temporary protective measure.,s.delgado,2026-04-02 16:39:47,
+ACT-00089,ACC-000842,account_suspended,Malware delivery response — temporary protective measure.,j.fletcher,2026-04-14 15:17:16,INV-00276
+ACT-00090,ACC-001856,rate_limited,Linked to active campaign — resolved after review.,t.ibrahim,2026-03-23 07:59:36,
+ACT-00091,ACC-000564,cleared_no_action,Linked to active campaign — temporary protective measure.,m.chen,2026-03-14 19:06:23,
+ACT-00092,ACC-001963,manual_review,Insider activity response — pending verification.,a.okafor,2026-05-20 01:01:13,INV-00162
+ACT-00093,ACC-001158,manual_review,Insider activity response — pending verification.,t.ibrahim,2026-04-23 02:25:55,INV-00104
+ACT-00094,ACC-000664,mfa_enforced,Account takeover response — temporary protective measure.,m.chen,2026-04-20 00:30:03,INV-00193
+ACT-00095,ACC-000118,rate_limited,Linked to active campaign — temporary protective measure.,r.kowalski,2026-05-27 04:32:14,
+ACT-00096,ACC-001312,external_sharing_disabled,Data exfiltration response — temporary protective measure.,a.okafor,2026-04-25 23:10:36,INV-00132
+ACT-00097,ACC-001669,rate_limited,Multiple high-severity signals — awaiting customer response.,p.novak,2026-04-06 21:08:50,
+ACT-00098,ACC-000020,external_sharing_disabled,Data exfiltration response — resolved after review.,p.novak,2026-03-26 20:16:29,INV-00302
+ACT-00099,ACC-000922,rate_limited,Api token abuse response — resolved after review.,j.fletcher,2026-05-19 15:32:11,INV-00287
+ACT-00100,ACC-001568,rate_limited,Linked to active campaign — awaiting customer response.,p.novak,2026-02-18 05:28:20,
+ACT-00101,ACC-000263,manual_review,Benign response — pending verification.,a.okafor,2026-04-15 20:08:38,INV-00164
+ACT-00102,ACC-000546,forced_password_reset,Multiple high-severity signals — resolved after review.,a.okafor,2026-02-12 15:38:06,
+ACT-00103,ACC-000576,rate_limited,Multiple high-severity signals — resolved after review.,a.okafor,2026-05-20 22:20:29,
+ACT-00104,ACC-000484,rate_limited,Api token abuse response — pending verification.,a.okafor,2026-04-02 13:46:12,INV-00237
+ACT-00105,ACC-000195,manual_review,Linked to active campaign — pending verification.,m.chen,2026-05-07 08:27:53,
+ACT-00106,ACC-000443,manual_review,Benign response — resolved after review.,j.fletcher,2026-04-02 21:45:22,INV-00286
+ACT-00107,ACC-000143,account_suspended,Malware delivery response — pending verification.,c.ramirez,2026-03-02 03:56:36,INV-00031
+ACT-00108,ACC-000740,account_suspended,Malware delivery response — pending verification.,r.kowalski,2026-03-16 20:58:16,INV-00115
+ACT-00109,ACC-001490,session_revoked,Api token abuse response — resolved after review.,t.ibrahim,2026-02-07 13:06:16,INV-00070
+ACT-00110,ACC-001485,manual_review,Benign response — resolved after review.,m.chen,2026-03-14 09:57:56,INV-00164
+ACT-00111,ACC-000972,external_sharing_disabled,Customer-reported compromise — temporary protective measure.,t.ibrahim,2026-05-27 21:25:19,
+ACT-00112,ACC-000601,external_sharing_disabled,Data exfiltration response — temporary protective measure.,c.ramirez,2026-03-02 13:52:41,INV-00086
+ACT-00113,ACC-001561,manual_review,Benign response — temporary protective measure.,m.chen,2026-05-08 20:36:46,INV-00137
+ACT-00114,ACC-001556,session_revoked,Elevated risk score — temporary protective measure.,j.fletcher,2026-02-13 20:55:39,
+ACT-00115,ACC-000721,external_sharing_disabled,Insider activity response — temporary protective measure.,m.chen,2026-04-19 13:39:44,INV-00184
+ACT-00116,ACC-000264,forced_password_reset,Credential stuffing response — resolved after review.,r.kowalski,2026-03-19 10:37:07,INV-00177
+ACT-00117,ACC-001063,rate_limited,Credential stuffing response — pending verification.,a.okafor,2026-05-26 17:44:16,INV-00010
+ACT-00118,ACC-001915,forced_password_reset,Credential stuffing response — temporary protective measure.,c.ramirez,2026-04-14 13:48:22,INV-00050
+ACT-00119,ACC-000964,rate_limited,Multiple high-severity signals — temporary protective measure.,s.delgado,2026-05-25 12:15:02,
+ACT-00120,ACC-000208,forced_password_reset,Credential stuffing response — pending verification.,j.fletcher,2026-03-13 19:55:29,INV-00148
+ACT-00121,ACC-000753,external_sharing_disabled,Multiple high-severity signals — pending verification.,c.ramirez,2026-03-05 17:41:53,
+ACT-00122,ACC-001345,external_sharing_disabled,Data exfiltration response — resolved after review.,s.delgado,2026-02-01 07:37:29,INV-00212
+ACT-00123,ACC-000138,manual_review,Benign response — resolved after review.,j.fletcher,2026-03-24 02:14:17,INV-00134
+ACT-00124,ACC-000628,mfa_enforced,Policy violation — pending verification.,p.novak,2026-03-20 09:17:56,
+ACT-00125,ACC-001920,mfa_enforced,Policy violation — pending verification.,p.novak,2026-02-09 17:06:44,
+ACT-00126,ACC-000718,rate_limited,Customer-reported compromise — pending verification.,j.fletcher,2026-03-16 23:28:41,
+ACT-00127,ACC-001254,forced_password_reset,Credential stuffing response — pending verification.,p.novak,2026-03-23 21:56:09,INV-00318
+ACT-00128,ACC-000553,rate_limited,Api token abuse response — resolved after review.,p.novak,2026-05-16 12:29:47,INV-00287
+ACT-00129,ACC-001267,manual_review,Benign response — resolved after review.,t.ibrahim,2026-05-23 12:16:26,INV-00130
+ACT-00130,ACC-000878,account_suspended,Malware delivery response — temporary protective measure.,m.chen,2026-04-23 23:35:53,INV-00201
+ACT-00131,ACC-000244,account_suspended,Data exfiltration response — pending verification.,a.okafor,2026-03-30 16:52:24,INV-00283
+ACT-00132,ACC-000458,mfa_enforced,Multiple high-severity signals — pending verification.,r.kowalski,2026-03-15 10:15:44,
+ACT-00133,ACC-001094,forced_password_reset,Linked to active campaign — awaiting customer response.,a.okafor,2026-02-06 15:59:53,
+ACT-00134,ACC-000728,manual_review,Insider activity response — resolved after review.,c.ramirez,2026-02-28 16:47:34,INV-00277
+ACT-00135,ACC-001583,manual_review,Benign response — pending verification.,j.fletcher,2026-04-18 23:16:14,INV-00271
+ACT-00136,ACC-000424,forced_password_reset,Linked to active campaign — awaiting customer response.,m.chen,2026-04-01 20:01:06,
+ACT-00137,ACC-001385,external_sharing_disabled,Multiple high-severity signals — awaiting customer response.,t.ibrahim,2026-04-03 03:50:01,
+ACT-00138,ACC-001202,rate_limited,Credential stuffing response — temporary protective measure.,s.delgado,2026-02-19 13:44:43,INV-00109
+ACT-00139,ACC-000889,manual_review,Benign response — pending verification.,s.delgado,2026-04-22 06:39:00,INV-00137
+ACT-00140,ACC-000586,rate_limited,Api token abuse response — pending verification.,t.ibrahim,2026-05-25 14:49:58,INV-00297
+ACT-00141,ACC-001202,external_sharing_disabled,Data exfiltration response — temporary protective measure.,s.delgado,2026-03-05 03:17:29,INV-00028
+ACT-00142,ACC-001806,manual_review,Linked to active campaign — awaiting customer response.,c.ramirez,2026-04-24 06:40:06,
+ACT-00143,ACC-001320,manual_review,Data exfiltration response — temporary protective measure.,t.ibrahim,2026-03-12 06:04:06,INV-00131
+ACT-00144,ACC-001485,external_sharing_disabled,Multiple high-severity signals — resolved after review.,s.delgado,2026-04-02 00:19:15,
+ACT-00145,ACC-000404,mfa_enforced,Phishing wave response — pending verification.,t.ibrahim,2026-04-15 02:07:30,INV-00069
+ACT-00146,ACC-001821,rate_limited,Credential stuffing response — pending verification.,p.novak,2026-05-25 21:19:32,INV-00116
+ACT-00147,ACC-000187,cleared_no_action,Elevated risk score — awaiting customer response.,t.ibrahim,2026-05-24 06:55:04,
+ACT-00148,ACC-001047,mfa_enforced,Multiple high-severity signals — awaiting customer response.,c.ramirez,2026-03-16 16:09:34,
+ACT-00149,ACC-001154,external_sharing_disabled,Policy violation — awaiting customer response.,a.okafor,2026-04-01 00:24:26,
+ACT-00150,ACC-000652,mfa_enforced,Linked to active campaign — temporary protective measure.,r.kowalski,2026-02-12 17:58:12,
+ACT-00151,ACC-001833,account_suspended,Malware delivery response — resolved after review.,a.okafor,2026-04-14 09:36:23,INV-00192
+ACT-00152,ACC-000093,cleared_no_action,Elevated risk score — temporary protective measure.,p.novak,2026-03-23 02:52:15,
+ACT-00153,ACC-001186,account_suspended,Policy violation — awaiting customer response.,c.ramirez,2026-05-31 23:39:19,
+ACT-00154,ACC-001846,account_suspended,Elevated risk score — resolved after review.,r.kowalski,2026-02-07 16:23:20,
+ACT-00155,ACC-000449,mfa_enforced,Phishing wave response — pending verification.,j.fletcher,2026-02-14 08:55:11,INV-00171
+ACT-00156,ACC-001911,forced_password_reset,Elevated risk score — awaiting customer response.,t.ibrahim,2026-03-15 23:58:05,
+ACT-00157,ACC-000960,session_revoked,Account takeover response — temporary protective measure.,m.chen,2026-05-18 10:14:40,INV-00242
+ACT-00158,ACC-000574,account_suspended,Linked to active campaign — resolved after review.,m.chen,2026-03-04 01:03:23,
+ACT-00159,ACC-000229,forced_password_reset,Multiple high-severity signals — temporary protective measure.,a.okafor,2026-02-14 13:53:27,
+ACT-00160,ACC-001736,forced_password_reset,Policy violation — resolved after review.,c.ramirez,2026-05-10 23:56:33,
+ACT-00161,ACC-001260,account_suspended,Multiple high-severity signals — temporary protective measure.,p.novak,2026-03-04 00:50:20,
+ACT-00162,ACC-001507,account_suspended,Malware delivery response — resolved after review.,m.chen,2026-02-26 07:01:49,INV-00194
+ACT-00163,ACC-001012,forced_password_reset,Policy violation — awaiting customer response.,s.delgado,2026-02-27 04:50:25,
+ACT-00164,ACC-001578,account_suspended,Multiple high-severity signals — pending verification.,j.fletcher,2026-04-30 15:46:04,
+ACT-00165,ACC-001332,rate_limited,Credential stuffing response — pending verification.,r.kowalski,2026-03-31 16:28:40,INV-00219
+ACT-00166,ACC-001293,rate_limited,Credential stuffing response — resolved after review.,c.ramirez,2026-02-09 16:52:12,INV-00197
+ACT-00167,ACC-000185,rate_limited,Policy violation — pending verification.,a.okafor,2026-02-28 00:01:19,
+ACT-00168,ACC-001984,forced_password_reset,Credential stuffing response — pending verification.,c.ramirez,2026-04-19 13:47:04,INV-00166
+ACT-00169,ACC-000294,manual_review,Benign response — pending verification.,s.delgado,2026-03-17 02:54:49,INV-00176
+ACT-00170,ACC-001020,manual_review,Phishing wave response — pending verification.,t.ibrahim,2026-04-16 02:03:18,INV-00112
+ACT-00171,ACC-000272,manual_review,Phishing wave response — resolved after review.,r.kowalski,2026-05-01 22:59:57,INV-00089
+ACT-00172,ACC-001621,session_revoked,Account takeover response — pending verification.,r.kowalski,2026-05-19 16:22:36,INV-00165
+ACT-00173,ACC-000795,manual_review,Insider activity response — temporary protective measure.,j.fletcher,2026-04-13 02:45:11,INV-00083
+ACT-00174,ACC-000652,account_suspended,Malware delivery response — resolved after review.,s.delgado,2026-02-14 18:35:24,INV-00194
+ACT-00175,ACC-000735,cleared_no_action,Multiple high-severity signals — temporary protective measure.,r.kowalski,2026-02-11 16:25:32,
+ACT-00176,ACC-000785,session_revoked,Policy violation — temporary protective measure.,r.kowalski,2026-03-10 05:17:04,
+ACT-00177,ACC-000397,external_sharing_disabled,Insider activity response — temporary protective measure.,a.okafor,2026-03-13 09:28:14,INV-00042
+ACT-00178,ACC-000631,forced_password_reset,Credential stuffing response — resolved after review.,s.delgado,2026-03-04 03:02:44,INV-00098
+ACT-00179,ACC-000861,manual_review,Data exfiltration response — resolved after review.,s.delgado,2026-05-03 21:20:53,INV-00015
+ACT-00180,ACC-000369,cleared_no_action,Linked to active campaign — temporary protective measure.,m.chen,2026-03-18 19:57:55,
+ACT-00181,ACC-001051,manual_review,Phishing wave response — temporary protective measure.,r.kowalski,2026-02-19 08:53:57,INV-00074
+ACT-00182,ACC-000735,forced_password_reset,Account takeover response — pending verification.,c.ramirez,2026-02-18 19:21:28,INV-00088
+ACT-00183,ACC-001743,mfa_enforced,Account takeover response — resolved after review.,a.okafor,2026-05-28 04:17:36,INV-00122
+ACT-00184,ACC-000133,manual_review,Data exfiltration response — temporary protective measure.,t.ibrahim,2026-03-20 07:29:33,INV-00266
+ACT-00185,ACC-001357,session_revoked,Account takeover response — resolved after review.,j.fletcher,2026-05-08 11:48:27,INV-00193
+ACT-00186,ACC-000464,manual_review,Phishing wave response — temporary protective measure.,r.kowalski,2026-04-17 02:41:05,INV-00151
+ACT-00187,ACC-001592,forced_password_reset,Credential stuffing response — resolved after review.,c.ramirez,2026-02-14 11:45:08,INV-00010
+ACT-00188,ACC-000633,rate_limited,Linked to active campaign — pending verification.,m.chen,2026-05-18 22:42:00,
+ACT-00189,ACC-000947,session_revoked,Phishing wave response — temporary protective measure.,s.delgado,2026-05-23 14:26:24,INV-00043
+ACT-00190,ACC-001855,manual_review,Benign response — pending verification.,s.delgado,2026-04-04 19:13:09,INV-00288
+ACT-00191,ACC-001943,session_revoked,Elevated risk score — resolved after review.,s.delgado,2026-04-11 19:56:36,
+ACT-00192,ACC-000986,forced_password_reset,Elevated risk score — pending verification.,a.okafor,2026-02-15 01:19:30,
+ACT-00193,ACC-001738,session_revoked,Phishing wave response — temporary protective measure.,r.kowalski,2026-02-20 01:44:23,INV-00107
+ACT-00194,ACC-001508,manual_review,Data exfiltration response — resolved after review.,p.novak,2026-05-01 17:41:01,INV-00259
+ACT-00195,ACC-000934,external_sharing_disabled,Insider activity response — pending verification.,r.kowalski,2026-05-05 07:57:02,INV-00214
+ACT-00196,ACC-001047,external_sharing_disabled,Customer-reported compromise — resolved after review.,t.ibrahim,2026-04-01 07:32:21,
+ACT-00197,ACC-000328,external_sharing_disabled,Data exfiltration response — pending verification.,m.chen,2026-02-19 05:37:50,INV-00132
+ACT-00198,ACC-000511,mfa_enforced,Account takeover response — temporary protective measure.,s.delgado,2026-05-10 15:25:14,INV-00243
+ACT-00199,ACC-000501,forced_password_reset,Credential stuffing response — temporary protective measure.,m.chen,2026-05-18 23:16:14,INV-00008
+ACT-00200,ACC-001857,rate_limited,Elevated risk score — pending verification.,a.okafor,2026-03-11 13:59:43,
+ACT-00201,ACC-001927,mfa_enforced,Multiple high-severity signals — pending verification.,p.novak,2026-05-18 08:33:00,
+ACT-00202,ACC-001097,external_sharing_disabled,Data exfiltration response — resolved after review.,p.novak,2026-05-24 18:12:56,INV-00032
+ACT-00203,ACC-001637,session_revoked,Multiple high-severity signals — awaiting customer response.,p.novak,2026-03-24 22:30:18,
+ACT-00204,ACC-000879,manual_review,Customer-reported compromise — resolved after review.,a.okafor,2026-03-13 22:28:06,
+ACT-00205,ACC-001411,session_revoked,Account takeover response — pending verification.,m.chen,2026-02-14 04:42:53,INV-00045
+ACT-00206,ACC-001715,session_revoked,Api token abuse response — resolved after review.,p.novak,2026-05-19 16:13:17,INV-00047
+ACT-00207,ACC-000789,manual_review,Data exfiltration response — resolved after review.,t.ibrahim,2026-04-21 07:36:32,INV-00264
+ACT-00208,ACC-000574,external_sharing_disabled,Insider activity response — temporary protective measure.,j.fletcher,2026-05-01 22:54:31,INV-00187
+ACT-00209,ACC-000108,external_sharing_disabled,Multiple high-severity signals — temporary protective measure.,m.chen,2026-03-29 08:11:45,
+ACT-00210,ACC-001620,forced_password_reset,Credential stuffing response — resolved after review.,c.ramirez,2026-02-13 13:28:51,INV-00148
+ACT-00211,ACC-001256,external_sharing_disabled,Data exfiltration response — pending verification.,c.ramirez,2026-02-14 07:58:19,INV-00068
+ACT-00212,ACC-000997,session_revoked,Policy violation — pending verification.,r.kowalski,2026-04-29 17:27:47,
+ACT-00213,ACC-000600,forced_password_reset,Customer-reported compromise — resolved after review.,p.novak,2026-02-16 13:00:40,
+ACT-00214,ACC-001917,account_suspended,Malware delivery response — pending verification.,s.delgado,2026-04-17 15:38:40,INV-00206
+ACT-00215,ACC-001750,mfa_enforced,Account takeover response — pending verification.,p.novak,2026-05-26 02:45:05,INV-00005
+ACT-00216,ACC-001373,rate_limited,Credential stuffing response — temporary protective measure.,a.okafor,2026-02-03 22:50:09,INV-00228
+ACT-00217,ACC-001498,rate_limited,Elevated risk score — temporary protective measure.,a.okafor,2026-03-31 23:49:29,
+ACT-00218,ACC-001734,rate_limited,Policy violation — pending verification.,s.delgado,2026-05-07 07:16:55,
+ACT-00219,ACC-000981,account_suspended,Malware delivery response — temporary protective measure.,j.fletcher,2026-02-17 19:20:58,INV-00272
+ACT-00220,ACC-001669,manual_review,Data exfiltration response — resolved after review.,p.novak,2026-05-20 23:13:57,INV-00086
+ACT-00221,ACC-001637,mfa_enforced,Customer-reported compromise — pending verification.,c.ramirez,2026-02-18 11:40:34,
+ACT-00222,ACC-000888,manual_review,Benign response — temporary protective measure.,s.delgado,2026-05-24 22:09:09,INV-00286
+ACT-00223,ACC-000758,session_revoked,Account takeover response — temporary protective measure.,j.fletcher,2026-03-13 06:12:20,INV-00232
+ACT-00224,ACC-000159,account_suspended,Multiple high-severity signals — temporary protective measure.,j.fletcher,2026-03-04 09:15:47,
+ACT-00225,ACC-000229,manual_review,Benign response — temporary protective measure.,c.ramirez,2026-02-13 00:29:37,INV-00125
+ACT-00226,ACC-000263,cleared_no_action,Multiple high-severity signals — awaiting customer response.,p.novak,2026-04-03 19:18:02,
+ACT-00227,ACC-001470,external_sharing_disabled,Insider activity response — pending verification.,j.fletcher,2026-05-02 15:01:28,INV-00027
+ACT-00228,ACC-000163,external_sharing_disabled,Policy violation — resolved after review.,j.fletcher,2026-02-16 03:29:22,
+ACT-00229,ACC-000601,forced_password_reset,Credential stuffing response — pending verification.,r.kowalski,2026-03-13 02:00:24,INV-00253
+ACT-00230,ACC-001498,manual_review,Benign response — resolved after review.,r.kowalski,2026-02-21 13:49:21,INV-00134
+ACT-00231,ACC-001502,external_sharing_disabled,Customer-reported compromise — resolved after review.,c.ramirez,2026-02-10 17:10:43,
+ACT-00232,ACC-000132,account_suspended,Elevated risk score — temporary protective measure.,a.okafor,2026-04-15 09:16:07,
+ACT-00233,ACC-001405,forced_password_reset,Credential stuffing response — pending verification.,t.ibrahim,2026-02-18 11:49:00,INV-00290
+ACT-00234,ACC-000192,account_suspended,Elevated risk score — awaiting customer response.,p.novak,2026-02-01 06:02:28,
+ACT-00235,ACC-000706,manual_review,Benign response — temporary protective measure.,c.ramirez,2026-04-30 15:53:56,INV-00130
+ACT-00236,ACC-001346,external_sharing_disabled,Data exfiltration response — pending verification.,j.fletcher,2026-03-20 15:54:10,INV-00235
+ACT-00237,ACC-001336,forced_password_reset,Policy violation — awaiting customer response.,s.delgado,2026-02-16 12:39:07,
+ACT-00238,ACC-000012,external_sharing_disabled,Data exfiltration response — temporary protective measure.,a.okafor,2026-05-31 09:03:18,INV-00073
+ACT-00239,ACC-000424,manual_review,Multiple high-severity signals — awaiting customer response.,m.chen,2026-05-12 22:02:27,
+ACT-00240,ACC-000972,external_sharing_disabled,Data exfiltration response — pending verification.,m.chen,2026-03-02 05:00:18,INV-00255
+ACT-00241,ACC-001923,session_revoked,Phishing wave response — resolved after review.,a.okafor,2026-04-29 06:00:50,INV-00119
+ACT-00242,ACC-000997,rate_limited,Api token abuse response — temporary protective measure.,a.okafor,2026-02-26 20:55:46,INV-00262
+ACT-00243,ACC-000273,rate_limited,Elevated risk score — resolved after review.,p.novak,2026-04-22 23:52:40,
+ACT-00244,ACC-000600,forced_password_reset,Linked to active campaign — temporary protective measure.,t.ibrahim,2026-02-13 21:08:34,
+ACT-00245,ACC-001241,session_revoked,Phishing wave response — resolved after review.,t.ibrahim,2026-02-21 07:29:39,INV-00270
+ACT-00246,ACC-001159,manual_review,Benign response — resolved after review.,t.ibrahim,2026-04-28 10:52:06,INV-00239
+ACT-00247,ACC-001317,manual_review,Elevated risk score — pending verification.,p.novak,2026-04-29 10:30:28,
+ACT-00248,ACC-000681,manual_review,Customer-reported compromise — resolved after review.,j.fletcher,2026-02-07 14:50:12,
+ACT-00249,ACC-000030,account_suspended,Customer-reported compromise — temporary protective measure.,j.fletcher,2026-03-25 03:51:07,
+ACT-00250,ACC-001557,session_revoked,Multiple high-severity signals — awaiting customer response.,r.kowalski,2026-05-23 11:18:32,
+ACT-00251,ACC-001861,external_sharing_disabled,Data exfiltration response — temporary protective measure.,s.delgado,2026-02-21 07:04:41,INV-00113
+ACT-00252,ACC-001398,manual_review,Benign response — pending verification.,c.ramirez,2026-04-06 10:06:47,INV-00203
+ACT-00253,ACC-001077,external_sharing_disabled,Elevated risk score — pending verification.,r.kowalski,2026-05-12 10:57:11,
+ACT-00254,ACC-000955,rate_limited,Credential stuffing response — resolved after review.,j.fletcher,2026-04-27 03:03:18,INV-00010
+ACT-00255,ACC-000929,manual_review,Phishing wave response — temporary protective measure.,p.novak,2026-04-24 20:37:22,INV-00258
+ACT-00256,ACC-000998,mfa_enforced,Phishing wave response — temporary protective measure.,s.delgado,2026-03-04 17:45:18,INV-00119
+ACT-00257,ACC-000397,external_sharing_disabled,Insider activity response — pending verification.,m.chen,2026-02-22 16:16:57,INV-00214
+ACT-00258,ACC-000445,mfa_enforced,Phishing wave response — temporary protective measure.,t.ibrahim,2026-03-10 12:48:44,INV-00265
+ACT-00259,ACC-000222,external_sharing_disabled,Data exfiltration response — pending verification.,m.chen,2026-04-14 10:35:51,INV-00255
+ACT-00260,ACC-000328,manual_review,Elevated risk score — temporary protective measure.,m.chen,2026-03-26 13:36:48,
+ACT-00261,ACC-001568,account_suspended,Malware delivery response — resolved after review.,m.chen,2026-05-27 20:20:41,INV-00190
+ACT-00262,ACC-001221,mfa_enforced,Linked to active campaign — temporary protective measure.,m.chen,2026-03-26 17:54:58,
+ACT-00263,ACC-000357,manual_review,Benign response — resolved after review.,c.ramirez,2026-05-05 04:02:41,INV-00006
+ACT-00264,ACC-000963,account_suspended,Malware delivery response — resolved after review.,r.kowalski,2026-05-07 01:27:41,INV-00201
+ACT-00265,ACC-001720,mfa_enforced,Account takeover response — temporary protective measure.,j.fletcher,2026-04-04 10:34:02,INV-00020
+ACT-00266,ACC-001323,manual_review,Insider activity response — resolved after review.,c.ramirez,2026-05-01 07:32:29,INV-00162
+ACT-00267,ACC-000680,mfa_enforced,Phishing wave response — pending verification.,j.fletcher,2026-02-26 21:22:48,INV-00107
+ACT-00268,ACC-000308,forced_password_reset,Policy violation — awaiting customer response.,s.delgado,2026-03-10 01:01:13,
+ACT-00269,ACC-001408,session_revoked,Api token abuse response — resolved after review.,a.okafor,2026-04-18 07:19:16,INV-00260
+ACT-00270,ACC-001534,manual_review,Benign response — pending verification.,a.okafor,2026-02-05 20:57:52,INV-00118
+ACT-00271,ACC-000390,manual_review,Insider activity response — temporary protective measure.,m.chen,2026-03-17 16:53:26,INV-00060
+ACT-00272,ACC-001617,mfa_enforced,Multiple high-severity signals — temporary protective measure.,s.delgado,2026-05-20 19:10:50,
+ACT-00273,ACC-001096,rate_limited,Api token abuse response — resolved after review.,p.novak,2026-02-05 16:45:34,INV-00320
+ACT-00274,ACC-000108,manual_review,Elevated risk score — awaiting customer response.,a.okafor,2026-05-03 10:00:27,
+ACT-00275,ACC-000706,manual_review,Benign response — resolved after review.,a.okafor,2026-02-04 04:30:48,INV-00182
+ACT-00276,ACC-000567,forced_password_reset,Account takeover response — resolved after review.,r.kowalski,2026-02-19 23:13:42,INV-00059
+ACT-00277,ACC-000115,forced_password_reset,Account takeover response — temporary protective measure.,p.novak,2026-03-11 11:13:29,INV-00054
+ACT-00278,ACC-001726,session_revoked,Multiple high-severity signals — temporary protective measure.,j.fletcher,2026-03-23 11:03:15,
+ACT-00279,ACC-001726,mfa_enforced,Account takeover response — pending verification.,m.chen,2026-04-19 23:09:40,INV-00003
+ACT-00280,ACC-000403,session_revoked,Phishing wave response — resolved after review.,t.ibrahim,2026-03-22 07:46:20,INV-00319
+ACT-00281,ACC-000294,account_suspended,Malware delivery response — resolved after review.,j.fletcher,2026-02-01 01:48:18,INV-00022
+ACT-00282,ACC-001129,rate_limited,Multiple high-severity signals — resolved after review.,j.fletcher,2026-02-02 15:01:21,
+ACT-00283,ACC-001020,forced_password_reset,Credential stuffing response — resolved after review.,c.ramirez,2026-05-31 03:04:35,INV-00008
+ACT-00284,ACC-000959,external_sharing_disabled,Data exfiltration response — resolved after review.,r.kowalski,2026-03-15 15:24:58,INV-00040
+ACT-00285,ACC-001319,external_sharing_disabled,Data exfiltration response — resolved after review.,m.chen,2026-05-25 03:25:25,INV-00028
+ACT-00286,ACC-000934,account_suspended,Data exfiltration response — resolved after review.,j.fletcher,2026-05-15 19:23:42,INV-00002
+ACT-00287,ACC-001996,external_sharing_disabled,Insider activity response — pending verification.,a.okafor,2026-04-26 04:28:11,INV-00099
+ACT-00288,ACC-001077,manual_review,Policy violation — temporary protective measure.,t.ibrahim,2026-05-24 12:52:24,
+ACT-00289,ACC-000251,manual_review,Insider activity response — pending verification.,j.fletcher,2026-03-30 11:21:45,INV-00051
+ACT-00290,ACC-001667,external_sharing_disabled,Data exfiltration response — temporary protective measure.,p.novak,2026-02-28 20:25:55,INV-00032
+ACT-00291,ACC-001557,external_sharing_disabled,Insider activity response — resolved after review.,j.fletcher,2026-03-14 00:40:30,INV-00052
+ACT-00292,ACC-001144,external_sharing_disabled,Elevated risk score — awaiting customer response.,j.fletcher,2026-04-16 01:59:05,
+ACT-00293,ACC-001409,forced_password_reset,Customer-reported compromise — temporary protective measure.,s.delgado,2026-03-04 05:56:47,
+ACT-00294,ACC-001036,session_revoked,Api token abuse response — pending verification.,j.fletcher,2026-02-01 08:55:45,INV-00320
+ACT-00295,ACC-001498,account_suspended,Data exfiltration response — pending verification.,t.ibrahim,2026-02-16 01:28:53,INV-00221
+ACT-00296,ACC-001080,session_revoked,Elevated risk score — temporary protective measure.,t.ibrahim,2026-04-29 03:35:40,
+ACT-00297,ACC-001699,account_suspended,Malware delivery response — pending verification.,a.okafor,2026-03-05 09:47:48,INV-00049
+ACT-00298,ACC-000775,forced_password_reset,Customer-reported compromise — temporary protective measure.,r.kowalski,2026-02-14 22:26:40,
+ACT-00299,ACC-001373,rate_limited,Credential stuffing response — temporary protective measure.,m.chen,2026-03-09 04:21:03,INV-00181
+ACT-00300,ACC-000997,cleared_no_action,Policy violation — resolved after review.,c.ramirez,2026-05-08 18:29:50,
+ACT-00301,ACC-000743,external_sharing_disabled,Elevated risk score — resolved after review.,j.fletcher,2026-02-14 19:50:55,
+ACT-00302,ACC-001507,session_revoked,Linked to active campaign — pending verification.,a.okafor,2026-05-23 17:20:10,
+ACT-00303,ACC-000001,mfa_enforced,Elevated risk score — resolved after review.,p.novak,2026-03-31 05:21:25,
+ACT-00304,ACC-001097,mfa_enforced,Account takeover response — temporary protective measure.,j.fletcher,2026-04-06 10:33:29,INV-00100
+ACT-00305,ACC-001405,rate_limited,Multiple high-severity signals — temporary protective measure.,t.ibrahim,2026-03-25 12:46:18,
+ACT-00306,ACC-000018,manual_review,Benign response — pending verification.,t.ibrahim,2026-04-26 06:40:45,INV-00023
+ACT-00307,ACC-000706,external_sharing_disabled,Data exfiltration response — pending verification.,a.okafor,2026-05-06 12:39:46,INV-00035
+ACT-00308,ACC-000459,mfa_enforced,Linked to active campaign — temporary protective measure.,m.chen,2026-03-15 12:21:59,
+ACT-00309,ACC-001859,manual_review,Insider activity response — pending verification.,p.novak,2026-05-05 11:48:52,INV-00072
+ACT-00310,ACC-000177,external_sharing_disabled,Linked to active campaign — awaiting customer response.,r.kowalski,2026-03-26 11:56:33,
+ACT-00311,ACC-001984,session_revoked,Phishing wave response — pending verification.,c.ramirez,2026-04-13 16:55:45,INV-00119
+ACT-00312,ACC-001278,manual_review,Phishing wave response — temporary protective measure.,t.ibrahim,2026-04-02 07:26:32,INV-00014
+ACT-00313,ACC-001244,mfa_enforced,Linked to active campaign — temporary protective measure.,p.novak,2026-05-12 00:50:15,
+ACT-00314,ACC-001386,account_suspended,Customer-reported compromise — pending verification.,m.chen,2026-02-18 09:56:41,
+ACT-00315,ACC-000813,mfa_enforced,Phishing wave response — temporary protective measure.,a.okafor,2026-03-17 08:22:46,INV-00012
+ACT-00316,ACC-001832,forced_password_reset,Policy violation — temporary protective measure.,m.chen,2026-02-01 10:42:43,
+ACT-00317,ACC-001787,account_suspended,Data exfiltration response — temporary protective measure.,p.novak,2026-03-07 21:03:12,INV-00035
+ACT-00318,ACC-000042,account_suspended,Customer-reported compromise — awaiting customer response.,a.okafor,2026-03-20 08:38:50,
+ACT-00319,ACC-001201,forced_password_reset,Account takeover response — resolved after review.,p.novak,2026-05-20 09:00:14,INV-00135
+ACT-00320,ACC-000997,account_suspended,Malware delivery response — pending verification.,j.fletcher,2026-03-10 20:06:08,INV-00190
+ACT-00321,ACC-001179,session_revoked,Api token abuse response — pending verification.,j.fletcher,2026-04-27 02:50:47,INV-00295
+ACT-00322,ACC-001578,manual_review,Insider activity response — pending verification.,t.ibrahim,2026-04-13 20:02:32,INV-00184
+ACT-00323,ACC-001622,session_revoked,Policy violation — awaiting customer response.,p.novak,2026-02-20 01:34:57,
+ACT-00324,ACC-000819,manual_review,Insider activity response — pending verification.,j.fletcher,2026-02-21 16:42:46,INV-00099
+ACT-00325,ACC-001537,session_revoked,Multiple high-severity signals — resolved after review.,s.delgado,2026-05-10 23:03:59,
+ACT-00326,ACC-000232,forced_password_reset,Credential stuffing response — resolved after review.,r.kowalski,2026-04-12 22:32:09,INV-00128
+ACT-00327,ACC-001187,session_revoked,Linked to active campaign — resolved after review.,r.kowalski,2026-05-05 23:29:07,
+ACT-00328,ACC-001221,forced_password_reset,Credential stuffing response — resolved after review.,p.novak,2026-02-04 20:40:30,INV-00200
+ACT-00329,ACC-001677,forced_password_reset,Account takeover response — pending verification.,p.novak,2026-05-17 08:31:35,INV-00248
+ACT-00330,ACC-000063,account_suspended,Elevated risk score — temporary protective measure.,c.ramirez,2026-04-02 14:29:13,
+ACT-00331,ACC-000490,account_suspended,Policy violation — pending verification.,t.ibrahim,2026-05-03 00:03:17,
+ACT-00332,ACC-001438,mfa_enforced,Linked to active campaign — resolved after review.,s.delgado,2026-02-12 14:39:51,
+ACT-00333,ACC-001316,account_suspended,Linked to active campaign — awaiting customer response.,p.novak,2026-03-21 11:00:07,
+ACT-00334,ACC-000839,account_suspended,Data exfiltration response — resolved after review.,r.kowalski,2026-05-08 02:07:12,INV-00222
+ACT-00335,ACC-000813,cleared_no_action,Customer-reported compromise — pending verification.,r.kowalski,2026-03-28 08:45:48,
+ACT-00336,ACC-000747,session_revoked,Account takeover response — pending verification.,m.chen,2026-03-01 04:10:19,INV-00250
+ACT-00337,ACC-000163,account_suspended,Malware delivery response — resolved after review.,m.chen,2026-03-05 05:44:30,INV-00111
+ACT-00338,ACC-000878,manual_review,Insider activity response — pending verification.,r.kowalski,2026-02-28 14:06:51,INV-00099
+ACT-00339,ACC-001218,rate_limited,Api token abuse response — pending verification.,p.novak,2026-05-03 05:42:08,INV-00303
+ACT-00340,ACC-000132,forced_password_reset,Customer-reported compromise — awaiting customer response.,m.chen,2026-04-18 15:45:08,
+ACT-00341,ACC-000552,account_suspended,Data exfiltration response — temporary protective measure.,r.kowalski,2026-05-09 21:33:00,INV-00087
+ACT-00342,ACC-000878,cleared_no_action,Customer-reported compromise — awaiting customer response.,j.fletcher,2026-04-17 13:49:49,
+ACT-00343,ACC-001532,manual_review,Insider activity response — temporary protective measure.,j.fletcher,2026-05-20 23:52:41,INV-00042
+ACT-00344,ACC-000147,mfa_enforced,Account takeover response — temporary protective measure.,m.chen,2026-04-12 01:14:39,INV-00227
+ACT-00345,ACC-000042,rate_limited,Api token abuse response — resolved after review.,s.delgado,2026-05-26 11:03:33,INV-00244
+ACT-00346,ACC-000789,external_sharing_disabled,Data exfiltration response — pending verification.,p.novak,2026-05-11 20:25:24,INV-00035
+ACT-00347,ACC-001385,mfa_enforced,Policy violation — temporary protective measure.,p.novak,2026-03-10 11:13:05,
+ACT-00348,ACC-000702,manual_review,Data exfiltration response — temporary protective measure.,t.ibrahim,2026-05-25 00:02:02,INV-00086
+ACT-00349,ACC-000418,manual_review,Benign response — temporary protective measure.,t.ibrahim,2026-03-21 03:43:27,INV-00046
+ACT-00350,ACC-000080,external_sharing_disabled,Multiple high-severity signals — temporary protective measure.,j.fletcher,2026-05-30 19:54:31,
+ACT-00351,ACC-000257,manual_review,Data exfiltration response — temporary protective measure.,t.ibrahim,2026-03-26 07:15:30,INV-00040
+ACT-00352,ACC-001917,rate_limited,Linked to active campaign — temporary protective measure.,a.okafor,2026-03-15 20:31:31,
+ACT-00353,ACC-001518,manual_review,Benign response — pending verification.,s.delgado,2026-05-21 07:50:40,INV-00204
+ACT-00354,ACC-000680,external_sharing_disabled,Insider activity response — temporary protective measure.,r.kowalski,2026-02-07 12:59:00,INV-00066
+ACT-00355,ACC-001887,external_sharing_disabled,Multiple high-severity signals — pending verification.,s.delgado,2026-05-14 17:12:18,
+ACT-00356,ACC-001684,manual_review,Benign response — temporary protective measure.,r.kowalski,2026-05-07 22:46:10,INV-00220
+ACT-00357,ACC-001486,account_suspended,Malware delivery response — pending verification.,p.novak,2026-04-24 00:39:22,INV-00105
+ACT-00358,ACC-001911,rate_limited,Api token abuse response — temporary protective measure.,c.ramirez,2026-05-01 13:31:52,INV-00189
+ACT-00359,ACC-000963,session_revoked,Account takeover response — pending verification.,c.ramirez,2026-02-23 02:13:44,INV-00005
+ACT-00360,ACC-001382,rate_limited,Customer-reported compromise — awaiting customer response.,t.ibrahim,2026-02-06 02:17:25,
+ACT-00361,ACC-001598,session_revoked,Policy violation — awaiting customer response.,s.delgado,2026-03-25 15:26:56,
+ACT-00362,ACC-000938,manual_review,Customer-reported compromise — awaiting customer response.,m.chen,2026-04-21 23:19:00,
+ACT-00363,ACC-001241,manual_review,Insider activity response — temporary protective measure.,r.kowalski,2026-03-21 19:11:36,INV-00184
+ACT-00364,ACC-000302,forced_password_reset,Customer-reported compromise — resolved after review.,a.okafor,2026-03-02 03:15:38,
+ACT-00365,ACC-000743,manual_review,Data exfiltration response — temporary protective measure.,r.kowalski,2026-02-27 03:22:01,INV-00087
+ACT-00366,ACC-000122,rate_limited,Credential stuffing response — temporary protective measure.,r.kowalski,2026-05-24 03:16:32,INV-00050
+ACT-00367,ACC-001508,forced_password_reset,Account takeover response — temporary protective measure.,m.chen,2026-02-03 03:55:11,INV-00045
+ACT-00368,ACC-001035,manual_review,Data exfiltration response — resolved after review.,c.ramirez,2026-05-31 15:44:08,INV-00068
+ACT-00369,ACC-000529,manual_review,Insider activity response — temporary protective measure.,j.fletcher,2026-04-13 07:43:10,INV-00099
+ACT-00370,ACC-000116,manual_review,Insider activity response — resolved after review.,p.novak,2026-05-31 21:09:21,INV-00027
+ACT-00371,ACC-001521,rate_limited,Policy violation — resolved after review.,p.novak,2026-03-23 08:39:09,
+ACT-00372,ACC-000785,forced_password_reset,Customer-reported compromise — resolved after review.,c.ramirez,2026-04-03 00:57:24,
+ACT-00373,ACC-000028,session_revoked,Linked to active campaign — pending verification.,j.fletcher,2026-02-02 12:44:38,
+ACT-00374,ACC-000889,external_sharing_disabled,Multiple high-severity signals — temporary protective measure.,m.chen,2026-05-11 23:34:20,
+ACT-00375,ACC-001316,account_suspended,Malware delivery response — temporary protective measure.,c.ramirez,2026-04-30 17:10:31,INV-00075
+ACT-00376,ACC-000890,external_sharing_disabled,Linked to active campaign — resolved after review.,p.novak,2026-05-12 20:54:33,
+ACT-00377,ACC-000878,account_suspended,Malware delivery response — temporary protective measure.,a.okafor,2026-03-31 08:41:30,INV-00241
+ACT-00378,ACC-001345,manual_review,Benign response — temporary protective measure.,a.okafor,2026-05-01 00:56:07,INV-00199
+ACT-00379,ACC-001202,cleared_no_action,Customer-reported compromise — temporary protective measure.,m.chen,2026-02-20 21:44:39,
+ACT-00380,ACC-001855,manual_review,Linked to active campaign — resolved after review.,r.kowalski,2026-05-12 07:42:26,
+ACT-00381,ACC-000858,session_revoked,Api token abuse response — pending verification.,r.kowalski,2026-04-26 13:32:53,INV-00233
+ACT-00382,ACC-000145,manual_review,Insider activity response — pending verification.,c.ramirez,2026-03-15 09:11:50,INV-00072
+ACT-00383,ACC-000940,external_sharing_disabled,Elevated risk score — pending verification.,p.novak,2026-04-15 09:31:12,
+ACT-00384,ACC-000523,session_revoked,Phishing wave response — pending verification.,c.ramirez,2026-05-22 11:52:30,INV-00265
+ACT-00385,ACC-000511,rate_limited,Policy violation — awaiting customer response.,a.okafor,2026-03-26 05:40:46,
+ACT-00386,ACC-001862,manual_review,Benign response — resolved after review.,m.chen,2026-03-21 14:10:07,INV-00307
+ACT-00387,ACC-001472,mfa_enforced,Multiple high-severity signals — resolved after review.,j.fletcher,2026-04-06 00:19:52,
+ACT-00388,ACC-000586,cleared_no_action,Multiple high-severity signals — resolved after review.,m.chen,2026-02-14 13:53:13,
+ACT-00389,ACC-001740,session_revoked,Policy violation — awaiting customer response.,s.delgado,2026-02-04 07:53:21,
+ACT-00390,ACC-001346,rate_limited,Credential stuffing response — temporary protective measure.,a.okafor,2026-04-29 13:32:13,INV-00219
+ACT-00391,ACC-000730,session_revoked,Api token abuse response — pending verification.,a.okafor,2026-02-23 18:47:47,INV-00224
+ACT-00392,ACC-001558,mfa_enforced,Phishing wave response — temporary protective measure.,p.novak,2026-03-22 22:40:29,INV-00152
+ACT-00393,ACC-000721,external_sharing_disabled,Insider activity response — temporary protective measure.,c.ramirez,2026-03-25 08:51:31,INV-00254
+ACT-00394,ACC-001158,manual_review,Benign response — resolved after review.,a.okafor,2026-04-08 06:02:48,INV-00064
+ACT-00395,ACC-000339,account_suspended,Malware delivery response — resolved after review.,s.delgado,2026-03-04 17:10:54,INV-00158
+ACT-00396,ACC-000853,account_suspended,Data exfiltration response — pending verification.,p.novak,2026-03-11 01:52:07,INV-00021
+ACT-00397,ACC-000552,manual_review,Benign response — resolved after review.,a.okafor,2026-04-20 02:02:47,INV-00291
+ACT-00398,ACC-000867,mfa_enforced,Account takeover response — pending verification.,c.ramirez,2026-04-30 20:09:16,INV-00121
+ACT-00399,ACC-001666,mfa_enforced,Policy violation — temporary protective measure.,s.delgado,2026-05-02 19:08:14,
+ACT-00400,ACC-001490,manual_review,Data exfiltration response — resolved after review.,m.chen,2026-03-03 15:50:02,INV-00155
+ACT-00401,ACC-000175,session_revoked,Phishing wave response — pending verification.,j.fletcher,2026-02-12 21:58:50,INV-00095
+ACT-00402,ACC-001074,forced_password_reset,Account takeover response — resolved after review.,t.ibrahim,2026-05-31 21:31:33,INV-00313
+ACT-00403,ACC-000089,rate_limited,Elevated risk score — temporary protective measure.,c.ramirez,2026-02-24 03:10:46,
+ACT-00404,ACC-001063,session_revoked,Phishing wave response — temporary protective measure.,j.fletcher,2026-05-10 12:04:56,INV-00180
+ACT-00405,ACC-000464,external_sharing_disabled,Data exfiltration response — resolved after review.,p.novak,2026-03-04 18:56:36,INV-00103
+ACT-00406,ACC-001927,cleared_no_action,Linked to active campaign — awaiting customer response.,j.fletcher,2026-05-16 02:36:51,
+ACT-00407,ACC-000192,external_sharing_disabled,Customer-reported compromise — temporary protective measure.,t.ibrahim,2026-05-11 00:33:42,
+ACT-00408,ACC-001158,manual_review,Benign response — resolved after review.,t.ibrahim,2026-03-26 10:34:53,INV-00085
+ACT-00409,ACC-000299,session_revoked,Policy violation — temporary protective measure.,j.fletcher,2026-04-04 00:29:59,
+ACT-00410,ACC-001541,external_sharing_disabled,Multiple high-severity signals — resolved after review.,r.kowalski,2026-02-27 05:59:10,
+ACT-00411,ACC-001254,manual_review,Insider activity response — resolved after review.,j.fletcher,2026-02-21 00:14:08,INV-00042
+ACT-00412,ACC-001064,account_suspended,Linked to active campaign — pending verification.,p.novak,2026-04-30 14:31:41,
+ACT-00413,ACC-000659,manual_review,Benign response — resolved after review.,p.novak,2026-03-27 00:54:03,INV-00220
+ACT-00414,ACC-000664,cleared_no_action,Multiple high-severity signals — awaiting customer response.,t.ibrahim,2026-03-06 01:12:10,
+ACT-00415,ACC-001962,account_suspended,Malware delivery response — pending verification.,t.ibrahim,2026-05-11 01:24:19,INV-00075
+ACT-00416,ACC-001743,manual_review,Phishing wave response — pending verification.,p.novak,2026-03-14 15:04:10,INV-00289
+ACT-00417,ACC-000546,account_suspended,Malware delivery response — resolved after review.,r.kowalski,2026-02-14 10:16:43,INV-00249
+ACT-00418,ACC-000986,session_revoked,Elevated risk score — pending verification.,c.ramirez,2026-05-28 07:25:40,
+ACT-00419,ACC-000009,manual_review,Data exfiltration response — temporary protective measure.,p.novak,2026-05-06 00:23:49,INV-00264
+ACT-00420,ACC-000311,manual_review,Benign response — temporary protective measure.,c.ramirez,2026-04-19 00:28:57,INV-00118
+ACT-00421,ACC-001621,rate_limited,Customer-reported compromise — resolved after review.,m.chen,2026-03-03 06:36:15,
+ACT-00422,ACC-000093,session_revoked,Customer-reported compromise — awaiting customer response.,j.fletcher,2026-03-26 09:18:39,
+ACT-00423,ACC-000124,external_sharing_disabled,Data exfiltration response — pending verification.,a.okafor,2026-02-10 22:27:12,INV-00268
+ACT-00424,ACC-001129,account_suspended,Malware delivery response — pending verification.,c.ramirez,2026-05-07 22:28:37,INV-00133
+ACT-00425,ACC-001258,forced_password_reset,Elevated risk score — awaiting customer response.,s.delgado,2026-05-08 23:51:14,
+ACT-00426,ACC-000115,manual_review,Elevated risk score — temporary protective measure.,j.fletcher,2026-03-13 10:21:47,
+ACT-00427,ACC-000549,rate_limited,Credential stuffing response — pending verification.,m.chen,2026-03-24 10:25:40,INV-00037
+ACT-00428,ACC-001063,forced_password_reset,Account takeover response — pending verification.,m.chen,2026-02-28 08:38:28,INV-00094
+ACT-00429,ACC-000518,manual_review,Phishing wave response — temporary protective measure.,s.delgado,2026-02-22 17:22:32,INV-00092
+ACT-00430,ACC-001239,rate_limited,Api token abuse response — temporary protective measure.,m.chen,2026-04-19 02:28:36,INV-00070
+ACT-00431,ACC-001136,session_revoked,Account takeover response — pending verification.,s.delgado,2026-04-29 08:00:22,INV-00185
+ACT-00432,ACC-000888,manual_review,Multiple high-severity signals — pending verification.,t.ibrahim,2026-03-15 17:43:23,
+ACT-00433,ACC-001929,rate_limited,Credential stuffing response — pending verification.,s.delgado,2026-04-10 15:28:22,INV-00238
+ACT-00434,ACC-001611,mfa_enforced,Multiple high-severity signals — awaiting customer response.,c.ramirez,2026-04-12 10:42:08,
+ACT-00435,ACC-001767,external_sharing_disabled,Data exfiltration response — temporary protective measure.,m.chen,2026-03-29 05:41:54,INV-00142
+ACT-00436,ACC-001768,manual_review,Data exfiltration response — pending verification.,c.ramirez,2026-02-26 10:19:41,INV-00159
+ACT-00437,ACC-001239,manual_review,Customer-reported compromise — awaiting customer response.,r.kowalski,2026-02-03 16:11:27,
+ACT-00438,ACC-000093,rate_limited,Linked to active campaign — awaiting customer response.,m.chen,2026-04-11 23:45:59,
+ACT-00439,ACC-001615,account_suspended,Malware delivery response — resolved after review.,r.kowalski,2026-03-08 08:59:12,INV-00048
+ACT-00440,ACC-001127,rate_limited,Credential stuffing response — pending verification.,a.okafor,2026-03-27 07:46:29,INV-00050
+ACT-00441,ACC-000842,external_sharing_disabled,Policy violation — temporary protective measure.,a.okafor,2026-04-29 06:10:58,
+ACT-00442,ACC-001417,manual_review,Data exfiltration response — temporary protective measure.,m.chen,2026-05-01 05:29:11,INV-00263
+ACT-00443,ACC-000571,external_sharing_disabled,Insider activity response — temporary protective measure.,r.kowalski,2026-02-19 01:31:55,INV-00051
+ACT-00444,ACC-001984,forced_password_reset,Credential stuffing response — temporary protective measure.,c.ramirez,2026-05-30 10:12:52,INV-00229
+ACT-00445,ACC-001785,manual_review,Benign response — resolved after review.,j.fletcher,2026-02-26 21:16:19,INV-00118
+ACT-00446,ACC-000960,rate_limited,Credential stuffing response — pending verification.,m.chen,2026-04-23 19:38:12,INV-00071
+ACT-00447,ACC-001914,forced_password_reset,Credential stuffing response — resolved after review.,a.okafor,2026-03-19 21:30:34,INV-00181
+ACT-00448,ACC-001556,forced_password_reset,Linked to active campaign — resolved after review.,a.okafor,2026-03-30 08:02:01,
+ACT-00449,ACC-000364,mfa_enforced,Elevated risk score — awaiting customer response.,r.kowalski,2026-02-09 22:47:20,
+ACT-00450,ACC-000309,session_revoked,Api token abuse response — temporary protective measure.,p.novak,2026-04-12 23:18:48,INV-00210
+ACT-00451,ACC-001293,manual_review,Benign response — pending verification.,s.delgado,2026-04-26 21:05:53,INV-00182
+ACT-00452,ACC-000132,manual_review,Benign response — resolved after review.,c.ramirez,2026-03-13 14:55:12,INV-00055
+ACT-00453,ACC-001855,manual_review,Benign response — pending verification.,s.delgado,2026-02-28 02:23:41,INV-00123
+ACT-00454,ACC-001667,rate_limited,Credential stuffing response — temporary protective measure.,j.fletcher,2026-05-10 10:33:07,INV-00098
+ACT-00455,ACC-000147,account_suspended,Data exfiltration response — temporary protective measure.,j.fletcher,2026-05-08 14:22:24,INV-00280
+ACT-00456,ACC-001950,manual_review,Policy violation — awaiting customer response.,j.fletcher,2026-02-17 03:12:12,
+ACT-00457,ACC-000020,account_suspended,Policy violation — pending verification.,j.fletcher,2026-05-31 00:09:01,
+ACT-00458,ACC-001346,account_suspended,Malware delivery response — temporary protective measure.,t.ibrahim,2026-04-03 13:12:52,INV-00175
+ACT-00459,ACC-000096,manual_review,Phishing wave response — pending verification.,p.novak,2026-05-23 18:16:50,INV-00157
+ACT-00460,ACC-001020,manual_review,Benign response — pending verification.,r.kowalski,2026-05-04 18:11:58,INV-00207
+ACT-00461,ACC-001750,rate_limited,Elevated risk score — pending verification.,t.ibrahim,2026-03-17 23:53:17,
+ACT-00462,ACC-000294,forced_password_reset,Credential stuffing response — resolved after review.,c.ramirez,2026-04-06 18:21:58,INV-00116
+ACT-00463,ACC-001464,manual_review,Phishing wave response — resolved after review.,p.novak,2026-03-19 19:12:40,INV-00110
+ACT-00464,ACC-000501,manual_review,Elevated risk score — pending verification.,j.fletcher,2026-05-21 06:57:55,
+ACT-00465,ACC-001186,manual_review,Elevated risk score — pending verification.,m.chen,2026-04-24 06:56:35,
+ACT-00466,ACC-001594,rate_limited,Api token abuse response — pending verification.,a.okafor,2026-05-03 02:44:53,INV-00114
+ACT-00467,ACC-000187,external_sharing_disabled,Policy violation — temporary protective measure.,c.ramirez,2026-02-05 06:58:36,
+ACT-00468,ACC-000594,rate_limited,Credential stuffing response — resolved after review.,t.ibrahim,2026-05-08 16:39:06,INV-00010
+ACT-00469,ACC-000055,cleared_no_action,Elevated risk score — temporary protective measure.,r.kowalski,2026-03-26 06:55:05,
+ACT-00470,ACC-001855,account_suspended,Elevated risk score — awaiting customer response.,m.chen,2026-04-16 19:53:06,
+ACT-00471,ACC-000014,mfa_enforced,Account takeover response — resolved after review.,s.delgado,2026-05-15 18:45:57,INV-00281
+ACT-00472,ACC-001633,rate_limited,Api token abuse response — temporary protective measure.,m.chen,2026-03-04 11:53:53,INV-00011
+ACT-00473,ACC-001373,account_suspended,Malware delivery response — temporary protective measure.,t.ibrahim,2026-04-12 03:04:00,INV-00299
+ACT-00474,ACC-000159,forced_password_reset,Credential stuffing response — resolved after review.,c.ramirez,2026-02-15 03:25:28,INV-00278
+ACT-00475,ACC-001017,manual_review,Benign response — pending verification.,c.ramirez,2026-03-30 12:31:00,INV-00207
+ACT-00476,ACC-001665,forced_password_reset,Linked to active campaign — pending verification.,m.chen,2026-05-08 03:27:19,
+ACT-00477,ACC-000511,mfa_enforced,Account takeover response — pending verification.,p.novak,2026-05-09 03:56:57,INV-00146
+ACT-00478,ACC-001047,session_revoked,Phishing wave response — temporary protective measure.,t.ibrahim,2026-02-02 11:09:35,INV-00107
+ACT-00479,ACC-001446,manual_review,Phishing wave response — pending verification.,t.ibrahim,2026-04-14 16:38:35,INV-00069
+ACT-00480,ACC-001608,rate_limited,Policy violation — resolved after review.,c.ramirez,2026-03-03 17:56:55,

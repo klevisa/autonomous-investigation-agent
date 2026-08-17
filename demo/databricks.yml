@@ -1,0 +1,93 @@
+# AIA DEMO-DATA bundle — SEPARATE from the product bundle (../databricks.yml).
+#
+# This exists ONLY to load DEMO data into a workspace for the PoC / e2e tests. AIA's real prod never runs it
+# (in prod AIA already has their own evidence tables + tools + cases). It is DEPLOYED AND RUN BY THE SEEDER
+# SP — a test-only identity granted CREATE_TABLE/FUNCTION/VOLUME on the schema (00_admin_prereqs) and
+# SELECT/INSERT/DELETE on the Lakebase cases (03b, by the deployer/owner). Because the seeder deploys this
+# bundle itself, its one job runs AS THE SEEDER with no run_as overlay, and it builds its OWN wheel
+# (aia-demo-lib: lib/ + demo_substrate) so it never shares the product bundle's wheel or artifacts path.
+#
+# The harness deploys + runs it (tests/.../04_seed.py and the L2 seed step) under the seeder profile, passing
+# the per-env values as --var. It is intentionally NOT part of CI/CD.
+bundle:
+  name: aia-demo
+
+# Builds aia-demo-lib from demo/pyproject.toml (force-includes ../lib + demo_substrate). dynamic_version
+# patches the version at deploy so a changed lib/ always yields a new wheel filename (serverless caches by
+# filename). Needs Python `build` on the deploy machine (same requirement as the product bundle) + .git.
+artifacts:
+  aia_demo_lib:
+    type: whl
+    build: python3 -m build --wheel
+    dynamic_version: true
+
+# The per-environment values, supplied as --var by the harness (from its config). Same names as the product
+# bundle uses, so the seed notebook's params line up; nothing here is secret or discovered.
+variables:
+  catalog:
+    description: Catalog the demo Delta substrate + UC tools live in.
+    default: ""
+  schema:
+    description: Schema for the substrate + UC tools (also the Postgres schema name).
+    default: ""
+  role_group:
+    description: The AIA role (account group) the demo grants evidence SELECT + tool EXECUTE to.
+    default: ""
+  lakebase_project:
+    description: Lakebase project id (host/endpoint derived from it at runtime).
+    default: ""
+  lakebase_branch:
+    description: Lakebase branch that owns the endpoint.
+    default: "production"
+  lakebase_endpoint:
+    description: Lakebase compute endpoint name.
+    default: "primary"
+  pg_database:
+    description: Lakebase Postgres database holding cases/investigations.
+    default: ""
+  deploy_suffix:
+    # Empty by default; the e2e harness sets it to "-<suffix>" so parallel prod-target TEST seeds get their
+    # OWN bundle root instead of sharing /Workspace/Shared/.bundle/aia-demo/prod (mirrors the product bundle).
+    description: Optional suffix on the prod bundle root path, to isolate parallel TEST deployments. Empty in prod.
+    default: ""
+
+targets:
+  # The harness overrides the workspace via `-p <seeder-profile>` on every command, so the profiles below are
+  # just sensible defaults for a manual `bundle deploy -t <target>` by an engineer.
+  stage:
+    mode: development
+    default: true
+    workspace:
+      profile: stage
+  prod:
+    mode: production
+    workspace:
+      profile: prod
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}${var.deploy_suffix}
+
+resources:
+  jobs:
+    seed_demo_data:
+      name: "[${bundle.target}] AIA · DEMO seed (Delta substrate + tools + 25 cases) — test-only"
+      tasks:
+        - task_key: seed_demo_data
+          notebook_task:
+            notebook_path: ./src/seed_demo_data.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              # CSVs sync with this bundle's files (demo/seed/), so seed_src points at this bundle's file path.
+              seed_src: ${workspace.file_path}/seed
+              role_group: ${var.role_group}
+              lakebase_project: ${var.lakebase_project}
+              lakebase_branch: ${var.lakebase_branch}
+              lakebase_endpoint: ${var.lakebase_endpoint}
+              pg_database: ${var.pg_database}
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - pg8000
+              - ./dist/*.whl   # aia-demo-lib — provides lib.* + demo_substrate (see pyproject + artifacts)

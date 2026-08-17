@@ -1,0 +1,41 @@
+actor_id,actor_name,aliases,sophistication,motivation,origin_region,first_seen,last_seen,is_active
+TA-0001,SCATTERED SPIDER,G3714; Scattered,high,hacktivism,Southeast Asia,2021-03-21,2026-04-18,True
+TA-0002,MIDNIGHT BLIZZARD,Midnight; G7971,low,insider,North America,2021-03-25,2026-04-06,True
+TA-0003,LAZARUS GROUP,G1292; APT85,advanced,espionage,Middle East,2021-11-01,2026-04-12,False
+TA-0004,FANCY BEAR,APT78; Fancy,strategic,insider,Eastern Europe,2020-03-12,2026-05-28,True
+TA-0005,COZY BEAR,Cozy; APT87,moderate,financial,West Africa,2024-09-19,2026-05-20,True
+TA-0006,WIZARD SPIDER,G6465; APT2,strategic,financial,West Africa,2021-10-18,2026-04-08,False
+TA-0007,MUDDYWATER,Muddywater; APT68,low,destruction,Unknown,2023-04-18,2026-04-05,True
+TA-0008,CHARMING KITTEN,Charming; G6777,high,financial,Middle East,2019-11-08,2026-04-02,True
+TA-0009,SANDWORM,APT41; G2284,strategic,hacktivism,Eastern Europe,2023-06-01,2026-04-27,True
+TA-0010,APT41,G1702; Apt41,moderate,financial,Unknown,2021-05-28,2026-05-10,True
+TA-0011,KIMSUKY,Kimsuky; APT46,moderate,espionage,Unknown,2022-12-26,2026-05-07,True
+TA-0012,VOLT TYPHOON,Volt; G4628,advanced,insider,South Asia,2022-06-27,2026-04-11,False
+TA-0013,SILENT CHOLLIMA,Silent; G8687,low,financial,South Asia,2020-08-21,2026-04-21,True
+TA-0014,INDRIK SPIDER,APT52; G6876,advanced,insider,Southeast Asia,2021-10-15,2026-04-22,True
+TA-0015,GOSSAMER BEAR,G4878; APT98,advanced,financial,North America,2022-03-26,2026-05-27,False
+TA-0016,STATIC KITTEN,Static; G9637,moderate,financial,Southeast Asia,2022-03-27,2026-05-20,True
+TA-0017,MUSTANG PANDA,G4981; APT86,advanced,espionage,North America,2024-01-18,2026-04-28,True
+TA-0018,OCEAN LOTUS,Ocean; APT75,strategic,insider,Eastern Europe,2022-03-21,2026-04-21,True
+TA-0019,DARKHYDRUS,APT3; G3436,low,insider,Unknown,2021-12-31,2026-04-03,True
+TA-0020,TURLA,APT23; Turla,moderate,financial,Unknown,2025-02-01,2026-05-03,True
+TA-0021,GAMAREDON,G6028; APT87,advanced,hacktivism,East Asia,2020-10-07,2026-04-12,True
+TA-0022,BLACKBYTE,APT39; Blackbyte,low,financial,Middle East,2025-02-24,2026-04-27,True
+TA-0023,EVILCORP,APT74; G5022,moderate,destruction,North America,2020-10-13,2026-04-08,True
+TA-0024,FIN7,APT96; Fin7,low,espionage,North America,2020-01-07,2026-05-15,True
+TA-0025,CARBANAK,APT1; Carbanak,advanced,hacktivism,West Africa,2025-01-04,2026-05-23,True
+TA-0026,TA505,G5905; Ta505,low,hacktivism,Eastern Europe,2025-03-30,2026-04-14,True
+TA-0027,UNC2452,G1878; Unc2452,strategic,destruction,Southeast Asia,2024-04-27,2026-05-02,True
+TA-0028,STORM-0558,APT87; Storm-0558,advanced,espionage,East Asia,2019-10-02,2026-04-27,True
+TA-0029,STORM-1167,Storm-1167; APT54,moderate,insider,Middle East,2023-07-20,2026-05-05,True
+TA-0030,GHOSTWRITER,G6265; APT14,advanced,hacktivism,North America,2021-11-23,2026-05-31,False
+TA-0031,BLACKCAT,APT90; Blackcat,low,destruction,Southeast Asia,2021-08-12,2026-05-30,False
+TA-0032,LOCKBIT,Lockbit; G1669,advanced,financial,North America,2025-04-27,2026-04-24,True
+TA-0033,CL0P,APT72; Cl0P,advanced,insider,North America,2020-04-18,2026-04-15,True
+TA-0034,AKIRA,APT19; G2764,moderate,espionage,South Asia,2023-09-13,2026-04-20,False
+TA-0035,QAKBOT-OP,APT62; G6551,strategic,espionage,Middle East,2020-12-27,2026-04-10,True
+TA-0036,EMOTET-OP,APT35; G9863,advanced,hacktivism,Middle East,2020-01-10,2026-04-16,True
+TA-0037,RHYSIDA,APT19; Rhysida,low,financial,South Asia,2023-01-10,2026-04-12,True
+TA-0038,PLAY,Play; G2031,strategic,insider,Southeast Asia,2021-11-05,2026-04-16,False
+TA-0039,MEDUSA,Medusa; G4031,moderate,insider,Eastern Europe,2024-04-21,2026-04-16,False
+TA-0040,8BASE,G6192; 8Base,high,financial,West Africa,2024-03-12,2026-05-06,True

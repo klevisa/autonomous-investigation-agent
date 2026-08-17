@@ -1,0 +1,232 @@
+# CI/CD — deploy the AIA PoC to Databricks on merge to master.
+#
+# SCOPE: CI/CD deploys CODE only — the jobs (`src/`) and the app (`app/`), both of which import `lib/`.
+# It never touches Lakebase, secrets, the schema/substrate data, or the demo seed — those are one-time
+# setup (scripts/setup.py), deliberately kept out of the CI path so a merge can never drop live data.
+# `bundle deploy` is idempotent (diff-based) and leaves unchanged resources + all data alone.
+#
+# SELECTIVE UPDATES (path-filtered): the app and the jobs are loosely coupled — the app triggers the
+# investigate job by a stable id, so a job-only change doesn't require an app restart, and vice-versa.
+#   * app/** or lib/**  changed → deploy the bundle AND restart the app (it only picks up code on restart)
+#   * src/** or lib/**  changed → deploy the bundle (job definitions refresh; no app restart needed)
+#   * databricks.yml / config.yml changed → deploy + restart app (resource shape may have changed)
+# `lib/` triggers both because both the app and the jobs import it.
+#
+# Auth: a Databricks service principal via OAuth M2M — CLIENT_ID/SECRET + HOST as GitHub repo secrets.
+# Required repo SECRETS (Settings ▸ Secrets and variables ▸ Actions ▸ Secrets):
+#   DATABRICKS_HOST           your PROD workspace URL, e.g. https://<workspace>.cloud.databricks.com
+#   DATABRICKS_CLIENT_ID      the CI service principal's application (client) id
+#   DATABRICKS_CLIENT_SECRET  the CI service principal's OAuth secret
+#
+# Required repo VARIABLES (same screen ▸ Variables) — the per-env bundle values. These are NON-SECRET
+# names (config.yml is gitignored, so it's not in the checkout — CI assembles one from these via
+# write-config.sh). Set the PROD values here (CI only deploys prod); PROD_APP_NAME + PROD_AGENT_MODE are
+# optional (agent_mode defaults to in_process); PROD_JOB_SP is required only when PROD_AGENT_MODE=job;
+# PROD_LLM_SECRET_REGION + PROD_LLM_SECRET_JSON_KEY are optional (default us-west-2 / "token"):
+#   PROD_CATALOG  PROD_SCHEMA  PROD_WAREHOUSE_ID  PROD_LAKEBASE_PROJECT  PROD_PG_DATABASE  PROD_LLM_ENDPOINT_URL  PROD_LLM_SERVICE_CREDENTIAL  PROD_LLM_SECRET_ARN  [PROD_AGENT_MODE  PROD_JOB_SP  PROD_APP_NAME  PROD_LLM_SECRET_REGION  PROD_LLM_SECRET_JSON_KEY]
+# (scripts/setup_cicd.py sets both the secrets and these variables from your prod values.)
+#
+# A PR to master runs `bundle validate` only.
+name: deploy-to-databricks
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  # Manual run — pick what to run via `targets`. This is the ESCAPE HATCH (forced redeploy-everything) AND
+  # the only way to run prod SETUP (Lakebase provision + build_structure). Two independent actions:
+  #   * CODE deploy  → automatic on push (path-filtered) OR here via targets=code|both
+  #   * LAKEBASE setup → NEVER runs on push; ONLY here via targets=lakebase|both (always an explicit choice —
+  #     a merge can never touch Lakebase, by construction). Setup runs provision-lakebase (direct postgres
+  #     API, as the CI SP → the CI SP owns Lakebase) + `bundle run build_structure`; never any demo seed
+  #     (demo data lives in the SEPARATE demo/ bundle, not this one).
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: "What to run (manual only). code = bundle deploy; lakebase = provision + build_structure; both = deploy then setup."
+        type: choice
+        options: [code, lakebase, both]
+        default: both
+
+concurrency:
+  group: databricks-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+  # The per-env bundle values, from repo VARIABLES (non-secret names). config.yml is gitignored so the
+  # checkout has none — each job below ASSEMBLES a prod config.yml from these, so CI's `bundle deploy` is
+  # byte-for-byte the same command AIA runs manually (no --var special-casing). app_name is optional
+  # (defaults in databricks.yml), so it's only written if the repo variable is set.
+  PROD_CATALOG: ${{ vars.PROD_CATALOG }}
+  PROD_SCHEMA: ${{ vars.PROD_SCHEMA }}
+  PROD_WAREHOUSE_ID: ${{ vars.PROD_WAREHOUSE_ID }}
+  PROD_LAKEBASE_PROJECT: ${{ vars.PROD_LAKEBASE_PROJECT }}
+  PROD_PG_DATABASE: ${{ vars.PROD_PG_DATABASE }}
+  PROD_LLM_ENDPOINT_URL: ${{ vars.PROD_LLM_ENDPOINT_URL }}           # LLM gateway invocations URL (required)
+  PROD_LLM_SERVICE_CREDENTIAL: ${{ vars.PROD_LLM_SERVICE_CREDENTIAL }}   # UC service credential name (required)
+  PROD_LLM_SECRET_ARN: ${{ vars.PROD_LLM_SECRET_ARN }}               # AWS Secrets Manager ARN (required)
+  PROD_LLM_SECRET_REGION: ${{ vars.PROD_LLM_SECRET_REGION }}         # AWS region (optional, default us-west-2)
+  PROD_LLM_SECRET_JSON_KEY: ${{ vars.PROD_LLM_SECRET_JSON_KEY }}     # JSON key in secret (optional, default "token")
+  PROD_AGENT_MODE: ${{ vars.PROD_AGENT_MODE }}     # in_process (default) | job
+  PROD_JOB_SP: ${{ vars.PROD_JOB_SP }}             # required only in job mode
+  PROD_APP_NAME: ${{ vars.PROD_APP_NAME }}
+  PROD_DEPLOY_SUFFIX: ${{ vars.PROD_DEPLOY_SUFFIX }}   # optional; isolates the prod bundle root for parallel TEST deploys (empty in prod)
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}   # override with repo var CI_RUNNER (e.g. self-hosted); defaults to GitHub-hosted
+    steps:
+      - uses: actions/checkout@v4
+      # Pin the CLI to a known-good version — do NOT track @main. The bundle "direct" deploy engine in newer
+      # CLIs has crashed (SIGSEGV in ResourceApp.OverrideChangeDesc) on the app resource; 0.299.2 is proven.
+      - uses: databricks/setup-cli@main
+        with:
+          version: 0.299.2
+      - name: Assemble prod config.yml from repo variables
+        run: bash .github/workflows/write-config.sh
+      - run: databricks bundle validate -t prod
+
+  # Decide the TWO independent actions — do_deploy (code) and do_setup (Lakebase) — from the trigger.
+  #   * PUSH: do_deploy = (a code path changed); do_setup = FALSE ALWAYS (a merge never touches Lakebase).
+  #   * DISPATCH: do_deploy = targets ∈ {code,both}; do_setup = targets ∈ {lakebase,both}.
+  # `app`/`jobs` are still emitted (from the path filter, or forced true on a dispatched deploy) so the
+  # deploy job knows whether to also restart the app.
+  changes:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}   # override with repo var CI_RUNNER (e.g. self-hosted); defaults to GitHub-hosted
+    outputs:
+      app: ${{ steps.decide.outputs.app }}
+      jobs: ${{ steps.decide.outputs.jobs }}
+      do_deploy: ${{ steps.decide.outputs.do_deploy }}
+      do_setup: ${{ steps.decide.outputs.do_setup }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # need the previous commit to diff against
+      - id: filter
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            app:
+              - 'app/**'
+              - 'lib/**'
+              - 'requirements.txt'
+              - 'databricks.yml'
+            jobs:
+              - 'src/**'
+              - 'lib/**'
+              - 'seed/**'
+              - 'databricks.yml'
+      - id: decide
+        env:
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # dispatch → the operator's `targets` choice drives both actions.
+            case "$TARGETS" in
+              code)     DODEP=true;  DOSET=false ;;
+              lakebase) DODEP=false; DOSET=true  ;;
+              both|*)   DODEP=true;  DOSET=true  ;;
+            esac
+            # a dispatched deploy is a full deploy (no diff) → force app+jobs true so the app also restarts.
+            echo "app=$DODEP"  >> "$GITHUB_OUTPUT"
+            echo "jobs=$DODEP" >> "$GITHUB_OUTPUT"
+            echo "do_deploy=$DODEP" >> "$GITHUB_OUTPUT"
+            echo "do_setup=$DOSET"  >> "$GITHUB_OUTPUT"
+          else
+            # push → path-filter drives code deploy; Lakebase setup NEVER runs on push.
+            echo "app=${{ steps.filter.outputs.app }}"   >> "$GITHUB_OUTPUT"
+            echo "jobs=${{ steps.filter.outputs.jobs }}" >> "$GITHUB_OUTPUT"
+            if [ "${{ steps.filter.outputs.app }}" = "true" ] || [ "${{ steps.filter.outputs.jobs }}" = "true" ]; then
+              echo "do_deploy=true"  >> "$GITHUB_OUTPUT"
+            else
+              echo "do_deploy=false" >> "$GITHUB_OUTPUT"
+            fi
+            echo "do_setup=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # CODE deploy — runs when do_deploy is true. `bundle deploy` refreshes the whole bundle idempotently;
+  # the app restart below is conditional on app-affecting changes.
+  deploy:
+    needs: changes
+    if: needs.changes.outputs.do_deploy == 'true'
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}   # override with repo var CI_RUNNER (e.g. self-hosted); defaults to GitHub-hosted
+    steps:
+      - uses: actions/checkout@v4
+      # Pin the CLI (see validate job) — the bundle "direct" deploy engine in newer CLIs SIGSEGVs on the app.
+      - uses: databricks/setup-cli@main
+        with:
+          version: 0.299.2
+
+      # `bundle deploy` builds the aia_lib wheel (artifacts.aia_lib → `python3 -m build --wheel`), so the
+      # runner needs Python + the `build` frontend (its isolated env fetches hatchling). dynamic_version
+      # reads git metadata for the wheel version, and checkout@v4 leaves .git present, so no extra fetch.
+      # setup-python provisions Python on hosted AND properly-set-up self-hosted runners (a runner whose user
+      # is `runner` with a normal tool cache). Then `pip install build` provides the wheel frontend.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install wheel build tooling
+        run: pip install build
+
+      - name: Assemble prod config.yml from repo variables
+        run: bash .github/workflows/write-config.sh
+
+      - name: Deploy bundle to prod (idempotent — job defs + app source; leaves data alone)
+        run: databricks bundle deploy -t prod
+
+      # Only restart the app when app-affecting files changed — a job-only change needs no restart
+      # (the app calls the job by name, and the job picks up new notebook code on its next run).
+      - name: Restart the app (app/lib changed)
+        if: needs.changes.outputs.app == 'true'
+        run: databricks bundle run aia_app -t prod
+
+  # LAKEBASE setup — provision + build_structure, as the CI SP (so the CI SP owns Lakebase). ONLY runs when
+  # do_setup is true, which is ONLY ever from a manual dispatch with targets=lakebase|both — never on push.
+  # `needs: deploy` orders it AFTER a code deploy (build_structure runs the deployed notebook; a first deploy
+  # births the app SP that build_structure grants). It TOLERATES a SKIPPED deploy (the lakebase-only case):
+  # the guard accepts deploy result 'success' OR 'skipped'. Never seeds demo data (that's the demo/ bundle).
+  setup:
+    needs: [changes, deploy]
+    if: >-
+      always() &&
+      needs.changes.outputs.do_setup == 'true' &&
+      (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    # Auth is PURELY from the DATABRICKS_* env vars (M2M) — same as the deploy job. We deliberately do NOT
+    # pin DATABRICKS_CONFIG_FILE here: doing so makes the CLI honor the prod target's `workspace.profile`
+    # (prod) and try to resolve it from that file, which fails under env-var auth ("has no
+    # prod profile configured"). With no config-file override, env-var creds win and both databricks_ops
+    # (SDK) and `bundle run` (CLI) authenticate. A clean CI runner has no ~/.databrickscfg to shadow creds;
+    # if a runner ever does, unset DATABRICKS_CONFIG_PROFILE rather than forcing an empty config file.
+    steps:
+      - uses: actions/checkout@v4
+      # Pin the CLI (see validate job) — the bundle "direct" deploy engine in newer CLIs SIGSEGVs on the app.
+      - uses: databricks/setup-cli@main
+        with:
+          version: 0.299.2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install databricks_ops deps (postgres API + SDK)
+        run: pip install -r databricks_ops/requirements.txt
+
+      - name: Assemble prod config.yml from repo variables
+        run: bash .github/workflows/write-config.sh
+
+      # Post-deploy setup — the SAME scripts/setup.py a manual deploy runs, so CI and manual share one recipe.
+      # It provisions Lakebase (direct postgres API — NOT a bundle resource, so `bundle destroy` never touches
+      # it; the CI SP owns the project), runs build_structure (creates the cases/investigations/journal tables
+      # + grants the app SP its pg role; job mode also grants the job SP journal INSERT), and — in job mode —
+      # wires the app↔job ACLs (app SP CAN_MANAGE_RUN on the job; job SP CAN_READ on the bundle root; both
+      # additive so a redeploy can't wipe them). Runs as the CI SP via env-var M2M auth (no --profile). setup.py
+      # reads config.yml + the AGENT_MODE it carries, so the mode branch lives in the recipe, not here.
+      # Idempotent (provision reuses; all DDL is CREATE ... IF NOT EXISTS).
+      - name: Post-deploy setup (Lakebase + build_structure + job wiring)
+        run: python3 scripts/setup.py --target prod

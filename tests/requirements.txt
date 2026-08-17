@@ -1,0 +1,12 @@
+# Test-only dependencies (NOT app/job/wheel runtime deps — those live in requirements.txt,
+# databricks.yml environments, and pyproject.toml respectively).
+#
+# Install:
+#   pip install -r tests/requirements.txt
+#   (on a network where public PyPI is blocked, add --index-url <your-pypi-index-url>)
+#
+# Tier 1 (unit) needs only pytest and the library's own runtime deps (pg8000 etc., already installed
+# where you run the app/jobs). Tier 2 (integration) additionally needs a local Postgres server on PATH
+# (postgres/initdb/pg_ctl — e.g. `brew install postgresql@16`); the tests spin up a throwaway instance
+# and skip cleanly if those binaries aren't found. No Docker required.
+pytest>=7.0
