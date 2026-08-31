@@ -1,4 +1,4 @@
-# CI/CD — deploy the AIA PoC to Databricks on merge to master.
+# CI/CD — deploy the AIA PoC to Databricks on merge to main.
 #
 # SCOPE: CI/CD deploys CODE only — the jobs (`src/`) and the app (`app/`), both of which import `lib/`.
 # It never touches Lakebase, secrets, the schema/substrate data, or the demo seed — those are one-time
@@ -26,14 +26,14 @@
 #   PROD_CATALOG  PROD_SCHEMA  PROD_WAREHOUSE_ID  PROD_LAKEBASE_PROJECT  PROD_PG_DATABASE  PROD_LLM_ENDPOINT_URL  PROD_LLM_SERVICE_CREDENTIAL  PROD_LLM_SECRET_ARN  [PROD_AGENT_MODE  PROD_JOB_SP  PROD_APP_NAME  PROD_LLM_SECRET_REGION  PROD_LLM_SECRET_JSON_KEY]
 # (scripts/setup_cicd.py sets both the secrets and these variables from your prod values.)
 #
-# A PR to master runs `bundle validate` only.
+# A PR to main runs `bundle validate` only.
 name: deploy-to-databricks
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
   # Manual run — pick what to run via `targets`. This is the ESCAPE HATCH (forced redeploy-everything) AND
   # the only way to run prod SETUP (Lakebase provision + build_structure). Two independent actions:
   #   * CODE deploy  → automatic on push (path-filtered) OR here via targets=code|both

@@ -51,6 +51,14 @@ def main(mode: str, restart) -> None:
         f"FROM investigations WHERE investigation_id='{inv}'", "n")
     r.check("at least one tool was called (member-SP warehouse query succeeded)", (n or 0) >= 1)
     print("  (model_endpoint tags the runner: aia-app-in-process | aia-investigate-job)")
+
+    # Audit trail: the RBAC model's whole point is that a MEMBER SP ran this. investigated_by is stamped with
+    # the runner's real identity (the app SP for in_process, the job SP for job) — only the bare "app"/"job"
+    # fallback strings mean identity resolution FAILED. Assert a real identity was recorded.
+    who = pg.inv_field(inv, "investigated_by")
+    print(f"  investigated_by: {who}")
+    r.check("investigation stamped with a resolved runner identity (not the fallback)",
+            bool(who) and who not in ("app", "job"))
     r.finish()
 
 

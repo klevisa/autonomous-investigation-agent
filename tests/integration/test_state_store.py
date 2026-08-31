@@ -118,3 +118,18 @@ def test_set_job_run_id(connect):
     store.set_job_run_id(inv_id, 12345)
     row = pg_query(connect, "SELECT job_run_id FROM investigations WHERE investigation_id=%s", (inv_id,))[0]
     assert row["job_run_id"] == "12345"
+
+
+def test_load_case_missing_returns_none(connect):
+    assert PostgresStateStore(connect).load_case("NO-SUCH-CASE") is None
+
+
+def test_verdict_timestamps_are_ordered(connect):
+    _seed_case(connect)
+    store = PostgresStateStore(connect)
+    inv_id = store.open_investigation("CASE-1", "ep", "", "me@x")
+    store.record_verdict(inv_id, "CASE-1", VERDICT)
+    row = pg_query(connect, "SELECT started_at, finished_at FROM investigations WHERE investigation_id=%s",
+                   (inv_id,))[0]
+    assert row["started_at"] is not None and row["finished_at"] is not None
+    assert row["finished_at"] >= row["started_at"]     # completion never precedes start

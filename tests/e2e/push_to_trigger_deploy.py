@@ -6,9 +6,9 @@
 We trigger via `gh workflow run deploy.yml -f targets=both` (the workflow's documented manual trigger),
 NOT a git push, because:
   * DETERMINISTIC + REPEATABLE — dispatch fires a run every time, regardless of whether HEAD differs from
-    remote master. A `git push HEAD:master` is a no-op when nothing is unpushed → no workflow → the run
-    stalls, so the suite could only ever run once per new commit. Dispatch also avoids junk commits on master.
-  * The run still builds off master's current HEAD, so it deploys exactly the committed code.
+    remote main. A `git push HEAD:main` is a no-op when nothing is unpushed → no workflow → the run
+    stalls, so the suite could only ever run once per new commit. Dispatch also avoids junk commits on main.
+  * The run still builds off main's current HEAD, so it deploys exactly the committed code.
 
 `targets=both` makes CI do the WHOLE prod bring-up in one run: `bundle deploy` (jobs + app) AND the setup
 job (provision Lakebase + build_structure), all as the CI SP (which owns the prod project). We deliberately
@@ -45,12 +45,12 @@ def _dispatch_and_watch(repo: str, attempts: int = 2) -> bool:
     for i in range(1, attempts + 1):
         prev = _latest_run_id(repo)   # newest run id BEFORE dispatch → poll for the run WE create
         disp = subprocess.run(
-            ["gh", "workflow", "run", "deploy.yml", "--repo", repo, "--ref", "master", "-f", "targets=both"],
+            ["gh", "workflow", "run", "deploy.yml", "--repo", repo, "--ref", "main", "-f", "targets=both"],
             capture_output=True, text=True)
         if disp.returncode != 0:
             print(f"  dispatch attempt {i} failed to submit: {disp.stderr.strip() or disp.stdout.strip()}")
             continue
-        print(f"  dispatched deploy.yml (attempt {i}/{attempts}, ref=master, targets=both)")
+        print(f"  dispatched deploy.yml (attempt {i}/{attempts}, ref=main, targets=both)")
         rid = waiters.wait_value("a new deploy.yml run to appear", 90,
                                  lambda: (lambda c: c if (c and c != prev) else None)(_latest_run_id(repo)),
                                  interval=3)

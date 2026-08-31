@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from tests.harness import config, dbx, report, render_config
@@ -56,7 +57,14 @@ def main(mode: str) -> None:
         if cp.returncode == 0:
             break
         if i < attempts:
-            report.step(f"  deploy attempt {i}/{attempts} failed (rc={cp.returncode}); retrying (transient?)")
+            # Explicit, intentional backoff between retries: an IMMEDIATE re-try just hits the same
+            # in-flight control-plane blip (504 upload / get-status timeout). Space attempts out so a
+            # transient clears before we try again. (The only wait the harness adds here, and it's on the
+            # failure path only — the shipped deploy itself owns its own readiness waits.)
+            backoff = 10 * i
+            report.step(f"  deploy attempt {i}/{attempts} failed (rc={cp.returncode}); "
+                        f"retrying in {backoff}s (transient?)")
+            time.sleep(backoff)
         else:
             sys.exit(f"shipped deploy.py failed after {attempts} attempts (rc={cp.returncode})")
 

@@ -16,7 +16,7 @@
 # Targets:
 #   stage — manual deploys by an engineer (scripts/deploy.py). Profile: stage.
 #   prod  — the CI/CD target. GitHub Actions runs `databricks bundle deploy -t prod` as a service
-#           principal on merge to master. run_as is the SP so the app + jobs run under a stable identity.
+#           principal on merge to main. run_as is the SP so the app + jobs run under a stable identity.
 #
 # One-time setup: (0) admin prereqs done OUT OF BAND — create the AIA role + grant it data/warehouse
 # access + [job mode] provision the job SP and ADD IT TO THE ROLE GROUP (no script; AIA tooling never
@@ -181,7 +181,7 @@ targets:
     workspace:
       profile: stage
 
-  # Production — deployed by CI/CD on merge to master (see .github/workflows/deploy.yml), as a service
+  # Production — deployed by CI/CD on merge to main (see .github/workflows/deploy.yml), as a service
   # principal via OAuth. Many orgs allow app/job deploys to prod ONLY through CI — this target is built
   # for that (see README "Locking prod deploys to CI/CD").
   prod:

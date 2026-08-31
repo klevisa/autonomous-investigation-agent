@@ -16,7 +16,7 @@ def latest_run_id(repo: str, workflow: str = "deploy.yml") -> str:
     return (cp.stdout or "").strip()
 
 
-def dispatch(repo: str, workflow: str = "deploy.yml", *, ref: str = "master", inputs: dict | None = None) -> bool:
+def dispatch(repo: str, workflow: str = "deploy.yml", *, ref: str = "main", inputs: dict | None = None) -> bool:
     """Trigger a workflow via `gh workflow run` (workflow_dispatch). `inputs` become -f key=value flags.
     Returns True if the dispatch was accepted (poll wait_new_run_id for the run it creates)."""
     argv = ["gh", "workflow", "run", workflow, "--repo", repo, "--ref", ref]
@@ -71,12 +71,12 @@ def step_conclusion(repo: str, run_id: str, name_regex: str) -> str:
 
 def push(remote: str, repo_root: str, *, empty: bool = False, paths: list[str] | None = None,
          message: str = "test") -> None:
-    """Commit and push HEAD to master. Commit ONLY what the test intends:
+    """Commit and push HEAD to main. Commit ONLY what the test intends:
       * empty=True         → an empty commit (used just to trigger a redeploy).
       * paths=[...]        → stage and commit EXACTLY those paths (the probe file a path-filter test touched).
     NEVER `git commit -am` (commit-all): a scenario running while the harness itself is being edited would
     otherwise sweep unrelated working-tree changes — and any test-only probe edits — into a commit pushed to
-    master. Committing only the intended paths keeps the test's git footprint to exactly its probe."""
+    main. Committing only the intended paths keeps the test's git footprint to exactly its probe."""
     if empty:
         subprocess.run(["git", "commit", "--allow-empty", "-m", message], cwd=repo_root,
                        capture_output=True, check=True)
@@ -86,4 +86,4 @@ def push(remote: str, repo_root: str, *, empty: bool = False, paths: list[str] |
                        capture_output=True, check=True)
     else:
         raise ValueError("gh.push needs empty=True or paths=[...] — refusing to commit-all")
-    subprocess.run(["git", "push", remote, "HEAD:master"], cwd=repo_root, check=True)
+    subprocess.run(["git", "push", remote, "HEAD:main"], cwd=repo_root, check=True)

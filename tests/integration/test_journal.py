@@ -79,3 +79,20 @@ def test_failed_event_carries_detail(connect):
     assert len(pending) == 1
     assert pending[0]["event_type"] == journal.FAILED
     assert pending[0]["detail"] == "LLM 503"
+
+
+def test_mark_applied_is_idempotent(connect):
+    # re-stamping an already-applied event is a harmless no-op (at-least-once replay safety).
+    _seed_running_investigation(connect, job_run_id="900")
+    journal.append_event(connect, "INV-1", journal.COMPLETED, "900", case_id="CASE-1", verdict={})
+    ev = journal.pending_terminal_events(connect)[0]
+    journal.mark_applied(connect, ev["event_id"])
+    journal.mark_applied(connect, ev["event_id"])            # second stamp must not raise
+    assert journal.pending_terminal_events(connect) == []
+
+
+def test_failed_detail_with_special_characters_round_trips(connect):
+    _seed_running_investigation(connect, job_run_id="900")
+    nasty = "O'Brien said \"boom\"; DROP TABLE cases; -- 100%"
+    journal.append_event(connect, "INV-1", journal.FAILED, "900", case_id="CASE-1", detail=nasty)
+    assert journal.pending_terminal_events(connect)[0]["detail"] == nasty

@@ -2,7 +2,7 @@
 """Deploy the bundle CODE (jobs + app) and start/restart the app. This is the deploy ACTION — separate from
 the post-deploy setup (scripts/setup.py). Used two ways:
   * staging: an engineer runs it by hand (manual deploy is allowed in stage),
-  * prod:    CI/CD does the equivalent on merge to master (.github/workflows/deploy.yml).
+  * prod:    CI/CD does the equivalent on merge to main (.github/workflows/deploy.yml).
 
 All per-env values come from config.yml (the DAB reads it natively via `include`), so this only needs a
 PROFILE + TARGET — no --var, no env vars for the values. It does NOT provision Lakebase, build structure, or

@@ -21,6 +21,7 @@ import time
 import urllib.parse
 
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.errors import ResourceConflict
 
 _RULESETS = "/api/2.0/preview/accounts/access-control/rule-sets"
 
@@ -124,15 +125,34 @@ def mint_additional_oauth_secret(w: WorkspaceClient, sp_id: str) -> str:
 
 # ── account groups (find-or-create, workspace-assign, membership) ────────────────────────────────
 def find_or_create_group(w: WorkspaceClient, display_name: str) -> dict:
-    """Return the account group with this displayName, creating it if absent."""
+    """Return the account group with this displayName, creating it if absent.
+
+    A re-run right after a prior run created this group (e.g. a crash mid-phase) can find the GET empty —
+    account SCIM is eventually consistent, same lag documented in databricks_ops/groups.py — then hit 409
+    CONFLICT on create. That 409 itself proves the group exists, so on conflict we poll the GET instead of
+    surfacing a create error for an object that's already there."""
     q = urllib.parse.quote(f'displayName eq "{display_name}"')
-    resp = w.api_client.do("GET", f"/api/2.0/account/scim/v2/Groups?filter={q}")
-    matches = resp.get("Resources") or []
-    if matches:
-        return matches[0]
-    return w.api_client.do("POST", "/api/2.0/account/scim/v2/Groups",
-                           body={"displayName": display_name,
-                                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"]})
+
+    def _find():
+        resp = w.api_client.do("GET", f"/api/2.0/account/scim/v2/Groups?filter={q}")
+        matches = resp.get("Resources") or []
+        return matches[0] if matches else None
+
+    found = _find()
+    if found:
+        return found
+    try:
+        return w.api_client.do("POST", "/api/2.0/account/scim/v2/Groups",
+                               body={"displayName": display_name,
+                                     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"]})
+    except ResourceConflict:
+        for _ in range(6):
+            found = _find()
+            if found:
+                return found
+            time.sleep(5)
+        raise RuntimeError(f"group {display_name!r}: create hit 409 (already exists) but never became "
+                           f"visible via SCIM filter after polling — account-SCIM propagation lag exceeded")
 
 
 def add_group_member(w: WorkspaceClient, group_id: str, member_id: str) -> None:

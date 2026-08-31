@@ -3,7 +3,7 @@
 AIA investigates **medium**-severity security cases and flags the ones that are actually **high** and should
 be escalated. It runs as a **Databricks App**: a FastAPI service with an API (called from **Tines**), a live
 UI, its state in **Lakebase**, and its evidence gathered through **governed Unity Catalog tools** and a
-**gateway LLM**. Deploys go to production on **merge to `master`**.
+**gateway LLM**. Deploys go to production on **merge to `main`**.
 
 The app is the **orchestrator and the state owner**. When a case comes in, it opens an investigation, runs a
 bounded tool-calling loop where the LLM decides which evidence to pull, records a verdict, and rolls the case
@@ -24,7 +24,7 @@ always in charge of state.
                                             Delta evidence, via a SQL
                                             warehouse or the job's Spark
 
-  Packaged as a Databricks Asset Bundle · shipped to production on merge to master (CI/CD).
+  Packaged as a Databricks Asset Bundle · shipped to production on merge to main (CI/CD).
 ```
 
 This is a **template** — nothing is hardcoded to a workspace. You supply every value. The bundled demo data is
@@ -61,7 +61,7 @@ durable job that reaches the tools through a SQL warehouse.
 | **Databricks CLI** (v0.230+) | every workspace call — `bundle deploy/run`, apps, Lakebase, grants |
 | **`python3`** (3.9+) with `databricks-sdk` + `pyyaml` | the `scripts/*.py` deploy/setup recipes |
 | **`python3 -m build`** | builds the `aia_lib` wheel at deploy (`pip install build`) |
-| **`git`** | the repo is deployed via CI on merge to `master` |
+| **`git`** | the repo is deployed via CI on merge to `main` |
 
 You do **not** install the app's runtime deps (`fastapi`, `pg8000`, …) — the Databricks Apps runtime does.
 
@@ -197,7 +197,7 @@ principal, not you) and **when** (through GitHub Actions, not by hand). The secu
 
 AIA separates the deploy into two halves that run on different triggers:
 
-- **Code** — the `investigate` job and the app. `bundle deploy`, run automatically on merge to `master`.
+- **Code** — the `investigate` job and the app. `bundle deploy`, run automatically on merge to `main`.
 - **State + infrastructure** — Lakebase, the table structure, the grants. `scripts/setup.py`, run **only on an
   explicit `workflow_dispatch`, never on a push.**
 
@@ -227,7 +227,7 @@ Sets the three Actions **secrets** (the CI SP's `DATABRICKS_HOST`/`CLIENT_ID`/`C
 credentials the workflow authenticates with) and the `PROD_*` repo **variables** (prod's single source of
 truth; the workflow assembles the prod `config.yml` from them). Needs `gh` authenticated to the repo owner.
 
-### Step 3 — deploy code (merge to `master`)
+### Step 3 — deploy code (merge to `main`)
 
 Open a PR and merge. On merge, `.github/workflows/deploy.yml` runs `bundle deploy -t prod` as the CI SP,
 **path-filtered**: an `app/` or `lib/` change redeploys and restarts the app; a `src/` change refreshes the job
@@ -238,7 +238,7 @@ only. PRs run `bundle validate`. This trigger **never** touches Lakebase, struct
 Standing prod up the first time — deploy the code, then run setup — is a single dispatch:
 
 ```bash
-gh workflow run deploy.yml --ref master -f targets=both      # deploy code, then Lakebase + build_structure
+gh workflow run deploy.yml --ref main -f targets=both      # deploy code, then Lakebase + build_structure
 ```
 
 `targets` is the control: `code` = `bundle deploy` only · `lakebase` = `scripts/setup.py` only (provision +

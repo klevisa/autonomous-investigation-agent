@@ -11,6 +11,7 @@ place. Verification reads Lakebase as the deployer/owner (which can always read 
 """
 import shutil
 import sys
+import time
 from pathlib import Path
 
 from tests.harness import config, dbx, report
@@ -57,7 +58,12 @@ def _demo_bundle(seeder: str, *args: str, target: str, what: str, clear_local=No
         if cp.returncode == 0:
             return
         if i < attempts:
-            report.step(f"  demo bundle {what} attempt {i}/{attempts} failed (rc={cp.returncode}); retrying (transient?)")
+            # Explicit, intentional backoff (see tests/e2e/deploy.py): an immediate re-try re-hits the same
+            # transient control-plane blip; space attempts out so it clears.
+            backoff = 10 * i
+            report.step(f"  demo bundle {what} attempt {i}/{attempts} failed (rc={cp.returncode}); "
+                        f"retrying in {backoff}s (transient?)")
+            time.sleep(backoff)
         else:
             sys.stderr.write(cp.stdout or "")
             sys.stderr.write(cp.stderr or "")

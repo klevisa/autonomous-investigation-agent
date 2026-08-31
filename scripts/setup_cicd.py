@@ -5,7 +5,7 @@ This is the ONLY scripted step for wiring CI/CD. It does NOT create identities o
 admin prerequisites you do once, by hand (see README "Prod admin prerequisites"): a deploying service
 principal (the "CI SP") with an OAuth M2M secret, granted catalog/schema + warehouse + (job mode)
 servicePrincipal.user on the job SP + ACCESS on the LLM credential, plus the AIA role group + its grants.
-Once those exist, this takes the resulting values and sets them on the repo so merge-to-master deploys work.
+Once those exist, this takes the resulting values and sets them on the repo so merge-to-main deploys work.
 
 Prereq: `gh` is authenticated to the account that owns the repo. Secret values are passed to `gh` on STDIN
 (not argv), and `gh secret set` handles the libsodium encryption the REST API requires — so the CLI is the
@@ -64,7 +64,7 @@ def push(repo: str, *, dbx_host: str, dbx_client_id: str, dbx_client_secret: str
     for name, val in variables.items():
         _gh_set("variable", name, val, repo)
     print(f"   {len(variables)} variables set.")
-    print("Done. Merge to master to trigger a deploy.")
+    print("Done. Merge to main to trigger a deploy.")
 
 
 def _require(name: str) -> str:

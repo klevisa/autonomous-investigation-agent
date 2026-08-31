@@ -61,7 +61,7 @@ def make_restart(cfg):
         def _do() -> None:
             report.step(f"restart {app_name} via a REAL CI redeploy (workflow_dispatch, targets=code)")
             prev = gh.latest_run_id(repo)                # capture BEFORE dispatch so we watch OUR run
-            gh.dispatch(repo, "deploy.yml", ref="master", inputs={"targets": "code"})
+            gh.dispatch(repo, "deploy.yml", ref="main", inputs={"targets": "code"})
             rid = gh.wait_new_run_id(repo, prev)
             if rid:
                 gh.watch(repo, rid)

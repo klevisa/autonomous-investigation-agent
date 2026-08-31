@@ -31,4 +31,9 @@ docs/CICD-CHECKLIST.md
 .venv/
 .pytest_cache/
 __pycache__/
+# coverage output (pytest-cov — see tests/requirements.txt)
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 .isaac/
