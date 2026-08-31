@@ -84,7 +84,7 @@ dbutils.widgets.text("case_scenario_label", "")
 # lib/ is installed as the `aia-lib` WHEEL in the serverless environment (databricks.yml) — imports as a
 # package from site-packages. See pyproject.toml.
 from lib.llm import GatewayLLM
-from lib.tools import SparkSqlRunner, WarehouseSqlRunner, make_tool_fn
+from lib.tools import make_sql_runner, make_tool_fn
 from lib.investigator import Investigator, MAX_TOKENS
 from lib import journal
 from lib.pg import make_pg_connect
@@ -165,14 +165,11 @@ print(f"journal: {journal.STARTED} appended for {INV_ID}")
 #                    query off the (idle) job compute. The `spark` session is NOT used at all in this mode;
 #                    the runner uses the ambient WorkspaceClient (_w = the job SP), which needs the role's
 #                    warehouse CAN_USE (granted to the group in admin_prereqs, inherited by membership).
-if AGENT_MODE == "job_warehouse":
-    if not WAREHOUSE_ID:
-        raise ValueError("warehouse_id is required in job_warehouse mode (tools run on the warehouse).")
-    tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
-    print(f"tools: WarehouseSqlRunner on {WAREHOUSE_ID} (job_warehouse — spark session unused)")
-else:
-    tool_fn = make_tool_fn(SparkSqlRunner(spark), CATALOG, SCHEMA)
-    print("tools: SparkSqlRunner on the job's own Spark session (job)")
+sql = make_sql_runner(AGENT_MODE, spark=spark, workspace=_w, warehouse_id=WAREHOUSE_ID)
+tool_fn = make_tool_fn(sql, CATALOG, SCHEMA)
+print(f"tools: {type(sql).__name__} "
+      + (f"on {WAREHOUSE_ID} (job_warehouse — spark session unused)" if AGENT_MODE == "job_warehouse"
+         else "on the job's own Spark session (job)"))
 llm = GatewayLLM()                                   # URL from env; token via AWS Secrets Manager (lib/llm.py)
 # no temperature: reasoning models (Claude Opus 5) reject it; the gateway defaults are fine.
 llm_fn = lambda messages, tools: llm.chat(messages, tools=tools, max_tokens=MAX_TOKENS)

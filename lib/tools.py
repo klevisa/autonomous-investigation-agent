@@ -62,6 +62,18 @@ class WarehouseSqlRunner:
         self._run(statement)
 
 
+def make_sql_runner(agent_mode, *, spark=None, workspace=None, warehouse_id=None):
+    """Pick the SqlRunner for a job driver's agent_mode: `job_warehouse` runs on the SQL warehouse
+    (WarehouseSqlRunner); anything else (i.e. plain `job`) runs on the ambient Spark session
+    (SparkSqlRunner) — mirrors src/investigate.py's own if/else exactly, extracted here because that file
+    is a Databricks notebook (dbutils/spark at module scope) and can't otherwise be unit tested."""
+    if agent_mode == "job_warehouse":
+        if not warehouse_id:
+            raise ValueError("warehouse_id is required in job_warehouse mode (tools run on the warehouse).")
+        return WarehouseSqlRunner(workspace, warehouse_id)
+    return SparkSqlRunner(spark)
+
+
 def make_tool_fn(sql, catalog, schema):
     """A tool_fn(name, value) the Investigator calls — runs the matching UC function via `sql`
     (a SqlRunner over Delta/UC: Spark in the job, warehouse in the endpoint)."""

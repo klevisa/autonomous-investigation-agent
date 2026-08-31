@@ -1,15 +1,19 @@
-"""Tier 1 — lib/tools.py WarehouseSqlRunner (SQL Statement Execution API adapter).
+"""Tier 1 — lib/tools.py WarehouseSqlRunner (SQL Statement Execution API adapter) + make_sql_runner.
 
 Offline: a fake WorkspaceClient.statement_execution returns scripted responses. Covers the
 success→rows-as-dicts mapping (manifest columns zipped to data), the non-SUCCEEDED→raise behavior (a failed
 tool must surface, not masquerade as empty), and the empty-result case. make_tool_fn itself is covered by
 test_make_tool_fn.py.
+
+make_sql_runner is the job/job_warehouse mode decision extracted from src/investigate.py (a Databricks
+notebook — dbutils/spark at module scope — so it can't be unit tested in place); these tests are the only
+coverage of that branching logic.
 """
 import types
 
 import pytest
 
-from lib.tools import WarehouseSqlRunner
+from lib.tools import SparkSqlRunner, WarehouseSqlRunner, make_sql_runner
 
 
 def _resp(state="SUCCEEDED", cols=None, rows=None, err_msg=None):
@@ -64,3 +68,29 @@ def test_exec_raises_on_failure():
     ws = _FakeWS(_resp("CANCELED"))
     with pytest.raises(RuntimeError, match="SQL CANCELED"):
         WarehouseSqlRunner(ws, "wh").exec("INSERT INTO t VALUES (1)")
+
+
+# ── make_sql_runner (the src/investigate.py mode decision) ────────────────────
+def test_job_warehouse_picks_warehouse_runner():
+    ws = object()   # identity check only — never called
+    sql = make_sql_runner("job_warehouse", workspace=ws, warehouse_id="wh-1")
+    assert isinstance(sql, WarehouseSqlRunner)
+    assert sql._w is ws and sql._wid == "wh-1"
+
+
+def test_job_warehouse_without_warehouse_id_raises():
+    with pytest.raises(ValueError, match="warehouse_id is required"):
+        make_sql_runner("job_warehouse", workspace=object(), warehouse_id="")
+
+
+def test_job_mode_picks_spark_runner():
+    spark = object()
+    sql = make_sql_runner("job", spark=spark)
+    assert isinstance(sql, SparkSqlRunner)
+    assert sql._spark is spark
+
+
+def test_unrecognized_mode_defaults_to_spark():
+    # mirrors src/investigate.py's own if/else: only "job_warehouse" branches to the warehouse.
+    spark = object()
+    assert isinstance(make_sql_runner("anything-else", spark=spark), SparkSqlRunner)

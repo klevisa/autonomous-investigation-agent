@@ -3,7 +3,7 @@
 waits for completion, and asserts the verdict + case rollup landed, and that a TOOL query ran AS THE ROLE
 (the whole point of the RBAC model).
 
-    python3 -m tests.e2e.scenarios.s01_happy_investigation <in_process|job>
+    python3 -m tests.e2e.scenarios.s01_happy_investigation <in_process|job|job_warehouse>
 """
 import os
 import sys
@@ -64,5 +64,5 @@ def main(mode: str, restart) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in ("in_process", "job", "job_warehouse"):
-        sys.exit("usage: python -m tests.e2e.scenarios.s01_happy_investigation <in_process|job>")
+        sys.exit("usage: python -m tests.e2e.scenarios.s01_happy_investigation <in_process|job|job_warehouse>")
     main(sys.argv[1], applifecycle.make_restart(config.load()))

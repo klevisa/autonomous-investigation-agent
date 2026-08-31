@@ -38,8 +38,8 @@ dev = local `bundle deploy` + `run`; cicd = a real CI redeploy (`workflow_dispat
 | `s01_happy_investigation` | both | end-to-end investigation → verdict + case rollup; a tool query ran (member SP → warehouse) |
 | `s02_recover_in_process` | in_process | orphaned `running` row + **restart** → startup reconcile re-runs it, attempts bumped |
 | `s03_attempts_cap` | in_process | orphan already at the cap + restart → reconcile **abandons** it (case → `needs_review`) |
-| `s04_recover_job` | job | the 5-case journal reconcile matrix (apply / re-fire±count / abandon / reject-forgery) |
-| `s07_restart_during_job` | job | a **restart** during a real job run doesn't kill the Spark job; verdict still lands via the journal |
+| `s04_recover_job` | job, job_warehouse | the 5-case journal reconcile matrix (apply / re-fire±count / abandon / reject-forgery) |
+| `s07_restart_during_job` | job, job_warehouse | a **restart** during a real job run doesn't kill the job; verdict still lands via the journal |
 | `s05_concurrency` | both | N investigations fired back-to-back all complete |
 | `s06_reconcile_noop` | both | restart with no `running` rows leaves terminal rows untouched + app healthy |
 | `s08_sp_boundary` | both | the deployer SP (synth in dev, CI SP in cicd) is **not** a `group.manager` — can't escalate into the role |

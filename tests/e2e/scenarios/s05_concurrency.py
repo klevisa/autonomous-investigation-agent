@@ -3,7 +3,7 @@
 in_process this exercises the app's background-thread pool; in job mode it's N concurrent job runs. Catches
 deadlocks / shared-state clobbering / connection exhaustion.
 
-    python3 -m tests.e2e.scenarios.s05_concurrency <in_process|job> [N]
+    python3 -m tests.e2e.scenarios.s05_concurrency <in_process|job|job_warehouse> [N]
 """
 import os
 import sys
@@ -48,6 +48,6 @@ def main(mode: str, restart, n: int = 5) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in ("in_process", "job", "job_warehouse"):
-        sys.exit("usage: python -m tests.e2e.scenarios.s05_concurrency <in_process|job> [N]")
+        sys.exit("usage: python -m tests.e2e.scenarios.s05_concurrency <in_process|job|job_warehouse> [N]")
     main(sys.argv[1], applifecycle.make_restart(config.load()),
          int(sys.argv[2]) if len(sys.argv) > 2 else 5)

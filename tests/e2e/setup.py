@@ -3,7 +3,7 @@
 scripts/setup.py (Lakebase provision + build_structure + job-mode app↔job wiring), then ASSERTS it
 completed cleanly with no admin-only step left in it.
 
-    python3 -m tests.e2e.setup <in_process|job>
+    python3 -m tests.e2e.setup <in_process|job|job_warehouse>
 """
 import json
 import os
@@ -53,5 +53,5 @@ def main(mode: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in ("in_process", "job", "job_warehouse"):
-        sys.exit("usage: python -m tests.e2e.setup <in_process|job>")
+        sys.exit("usage: python -m tests.e2e.setup <in_process|job|job_warehouse>")
     main(sys.argv[1])

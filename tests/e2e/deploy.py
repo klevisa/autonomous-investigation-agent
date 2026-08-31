@@ -2,7 +2,7 @@
 """The regular USER deploys (as DEPLOYER_PROFILE). Renders config.yml from config.env
 for the chosen mode, then runs the SHIPPED scripts/deploy.py. Births the app SP.
 
-    python3 -m tests.e2e.deploy <in_process|job>
+    python3 -m tests.e2e.deploy <in_process|job|job_warehouse>
 
 (config.yml is rendered from config.env by harness.render_config; then the SHIPPED scripts/deploy.py — the
 product's deliberate deploy recipe — is driven as the deployer, and we verify the app SP resolved. We keep
@@ -81,5 +81,5 @@ def main(mode: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in ("in_process", "job", "job_warehouse"):
-        sys.exit("usage: python -m tests.e2e.deploy <in_process|job>")
+        sys.exit("usage: python -m tests.e2e.deploy <in_process|job|job_warehouse>")
     main(sys.argv[1])

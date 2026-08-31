@@ -25,7 +25,7 @@ class Config:
     pg_database: str             # AIA_PG_DATABASE      — the Lakebase database holding cases/investigations
     investigate_job_name: str    # AIA_INVESTIGATE_JOB_NAME — its id is resolved by name at first use
     app_name: str                # AIA_APP_NAME         — the app's own resource name (optional)
-    warehouse_id: str            # AIA_WAREHOUSE_ID     — tools run here (in_process; unused in `job`)
+    warehouse_id: str            # AIA_WAREHOUSE_ID     — tools run here (in_process + job_warehouse; unused in `job`)
     agent_mode: str              # AIA_AGENT_MODE       — job_warehouse (default) | job | in_process
     job_sp: str                  # AIA_JOB_SP           — job modes: the job SP's client id (audit)
     max_attempts: int            # AIA_MAX_ATTEMPTS     — reconcile re-fire cap before needs_review

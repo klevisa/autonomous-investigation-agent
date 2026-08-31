@@ -19,7 +19,8 @@ Env (set by the DAB app resource — all static, all known before deploy):
   AIA_LAKEBASE_BRANCH/_ENDPOINT     the Lakebase branch + endpoint names (default production/primary)
   AIA_PG_DATABASE                   the Postgres database holding cases/investigations
   AIA_INVESTIGATE_JOB_NAME          the investigate job's name (its id is resolved by name at startup)
-  AIA_AGENT_MODE                    in_process (app runs tools itself) | job (dedicated job SP runs them)
+  AIA_AGENT_MODE                    in_process (app runs tools itself) | job_warehouse (default; job SP runs
+                                    tools on the warehouse) | job (job SP runs tools on its own Spark)
   AIA_WAREHOUSE_ID                  warehouse the in-process app runs the UC-function tools through
   AIA_JOB_SP                        job mode: the job SP's client id — stamped as `investigated_by` (audit)
   DATABRICKS_HOST / DATABRICKS_CLIENT_ID / DATABRICKS_CLIENT_SECRET are injected by the Apps runtime

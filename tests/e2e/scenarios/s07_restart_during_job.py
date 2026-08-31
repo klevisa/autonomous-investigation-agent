@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SCENARIO S07 (job mode) — a RESTART lands while a job-mode investigation's Spark job is still running.
+"""SCENARIO S07 (job / job_warehouse) — a RESTART lands while a job-mode investigation is still running.
 Unlike in_process, the job runs on its OWN compute, so an app restart does NOT kill it. Proves:
   (a) the restart doesn't disturb the running job (it keeps going on job compute), and
   (b) if the app was mid-restart when the verdict arrived, post-restart reconcile still lands it (via the

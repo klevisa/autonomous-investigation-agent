@@ -11,8 +11,10 @@ suite runs either way (mode-conditional only). The runs are:
     #  STRATEGY           MODE           WORKSPACE            CONFIG
     1  dev (manual)       in_process     staging workspace    config.stage-inproc.env
     2  dev (manual)       job            staging workspace    config.stage.env
-    3  cicd → prod        in_process     prod workspace       config.prod-inproc.env
-    4  cicd → prod        job            prod workspace       config.prod.env
+    3  dev (manual)       job_warehouse  staging workspace    config.stage-warehouse.env
+    4  cicd → prod        in_process     prod workspace       config.prod-inproc.env
+    5  cicd → prod        job            prod workspace       config.prod.env
+    6  cicd → prod        job_warehouse  prod workspace       config.prod-warehouse.env
 
 WHY THIS SHAPE (see tests/README.md):
   * dev is the *shipped manual path* — a regular user deploys by hand (scripts/deploy.py) and runs

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SCENARIO S04 (job mode only) — RECOVERY of orphaned job-mode investigations via the JOURNAL.
+"""SCENARIO S04 (job / job_warehouse) — RECOVERY of orphaned job-mode investigations via the JOURNAL.
 
 Job mode's verdict comes back not by HTTP callback but by the job APPENDING events to an append-only journal
 (investigation_events); the app reconciles them into `investigations`. There are exactly FIVE situations an

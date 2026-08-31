@@ -67,12 +67,18 @@ Runs every `(config, mode)` in order, each in its own fresh environment, and pri
 |---|----------|------|-----------|--------|
 | 1 | dev (manual) | in_process | staging | `config.stage-inproc.env` |
 | 2 | dev (manual) | job | staging | `config.stage.env` |
-| 3 | cicd → prod | in_process | prod | `config.prod-inproc.env` |
-| 4 | cicd → prod | job | prod | `config.prod.env` |
+| 3 | dev (manual) | job_warehouse | staging | `config.stage-warehouse.env` |
+| 4 | cicd → prod | in_process | prod | `config.prod-inproc.env` |
+| 5 | cicd → prod | job | prod | `config.prod.env` |
+| 6 | cicd → prod | job_warehouse | prod | `config.prod-warehouse.env` |
+
+`job_warehouse` is the product's **default** agent mode (see `databricks.yml`) — the job SP runs tools
+against the SQL warehouse (via the Statement Execution API) rather than plain `job`'s ambient Spark.
 
 It **auto-tears-down each run once it passes**, and on the first failure **stops and leaves that environment
 live** (printing its teardown command). Flags: `--only 1,2`, `--keep`, and `--dev-inproc / --dev-job /
---cicd-inproc / --cicd-job` to override a config file. `python3 -m tests.run_e2e --help` for details.
+--dev-warehouse / --cicd-inproc / --cicd-job / --cicd-warehouse` to override a config file.
+`python3 -m tests.run_e2e --help` for details.
 
 ### One run at a time
 
