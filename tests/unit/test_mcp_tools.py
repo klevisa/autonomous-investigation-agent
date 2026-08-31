@@ -1,13 +1,15 @@
 """Tier 1 — the MCP tool-routing adapter (lib/mcp_tools).
 
-Pins the two things most likely to silently break: (1) MCP calls use each UC function's REAL SQL
-parameter name (UC_FUNCTION_PARAM's "ind"), NOT lib/investigator.TOOL_ARG's LLM-facing "indicator" —
-see lib/mcp_tools.py's module docstring for why; and (2) routing sends enrich_indicator/pivot_indicator
-to the MCP path and the other 3 tools to the SQL path, unchanged.
+Pins three things caught by live testing against a real workspace (see the module's own comments for
+the exact failure each guards against): (1) each MCP tool call uses its OWN input-schema parameter
+name (UC_FUNCTION_PARAM) — "ind" for pivot_indicator (managed MCP mirrors the UC function's real SQL
+param) but "indicator" for enrich_indicator (our own custom server's tool signature); (2) managed MCP
+calls use the mangled catalog__schema__function name, not the bare tool name; and (3) routing sends
+enrich_indicator/pivot_indicator to the MCP path and the other 3 tools to the SQL path, unchanged.
 """
 import json
 
-from lib.mcp_tools import make_mcp_tool_fn, make_routed_tool_fn
+from lib.mcp_tools import make_mcp_tool_fn, make_routed_tool_fn, managed_mcp_tool_name
 
 
 class FakeMCPClient:
@@ -24,35 +26,64 @@ class FakeMCPClient:
         return {"content": [{"text": self._text}]}
 
 
-def test_mcp_call_uses_real_uc_param_name_not_llm_facing_name():
-    # enrich_indicator/pivot_indicator's real UC function param is "ind" (demo/src/seed_demo_data.py),
-    # not TOOL_ARG's "indicator" — a call built with the wrong key would fail against the real function.
+def test_managed_mcp_tool_name_mangles_catalog_schema_function():
+    # Verified live: Databricks managed MCP names a UC-function tool catalog__schema__function even
+    # when the server URL is scoped to a single function — the bare function name 400s on call_tool.
+    assert managed_mcp_tool_name("cat", "sch", "pivot_indicator") == "cat__sch__pivot_indicator"
+
+
+def test_pivot_indicator_call_uses_the_mangled_name_and_the_uc_functions_real_sql_param_name():
+    # pivot_indicator is Databricks MANAGED MCP, which mirrors the UC function's own signature, so its
+    # MCP schema param is "ind" (demo/src/seed_demo_data.py) — not TOOL_ARG's "indicator" — and it must
+    # be called by its mangled name, not the bare "pivot_indicator".
     client = FakeMCPClient(json.dumps([{"ok": True}]))
-    fn = make_mcp_tool_fn({"enrich_indicator": client})
+    fn = make_mcp_tool_fn({"pivot_indicator": (client, "cat__sch__pivot_indicator")})
+    fn("pivot_indicator", "http://bad.example/x")
+    assert client.calls == [("cat__sch__pivot_indicator", {"ind": "http://bad.example/x"})]
+
+
+def test_enrich_indicator_call_uses_its_bare_name_and_the_custom_servers_own_param_name():
+    # enrich_indicator is OUR OWN custom MCP server (app/mcp_server.py's `def enrich_indicator(indicator)`),
+    # reached via a connection-backed MCP Service — verified live: it's called by its bare name (no
+    # mangling), and its MCP schema param is "indicator", not "ind" ({"ind": ...} fails pydantic
+    # validation against the deployed server: "Field required: indicator"). Do not "fix" either back.
+    client = FakeMCPClient(json.dumps([{"ok": True}]))
+    fn = make_mcp_tool_fn({"enrich_indicator": (client, "enrich_indicator")})
     fn("enrich_indicator", "http://bad.example/x")
-    assert client.calls == [("enrich_indicator", {"ind": "http://bad.example/x"})]
+    assert client.calls == [("enrich_indicator", {"indicator": "http://bad.example/x"})]
 
 
 def test_enrich_indicator_result_is_json_decoded():
     client = FakeMCPClient(json.dumps([{"indicator": "x", "query_status": "ok"}]))
-    fn = make_mcp_tool_fn({"enrich_indicator": client})
+    fn = make_mcp_tool_fn({"enrich_indicator": (client, "enrich_indicator")})
     assert fn("enrich_indicator", "x") == [{"indicator": "x", "query_status": "ok"}]
 
 
-def test_pivot_indicator_result_falls_back_to_csv_when_not_json():
-    # Databricks-managed MCP controls pivot_indicator's serialization; make_mcp_tool_fn must tolerate a
-    # CSV-formatted result the same way the JSON-then-CSV fallback in lib/mcp_tools._parse_managed_rows
-    # documents (mirrors unitycatalog-ai's own table-valued CSV format — confirmed in app/mcp_server.py).
-    csv_text = "indicator_value,campaign_id\nx,camp-1\n"
-    client = FakeMCPClient(csv_text)
-    fn = make_mcp_tool_fn({"pivot_indicator": client})
+def test_pivot_indicator_result_parses_the_real_columns_rows_shape():
+    # Verified live: Databricks-managed MCP's tools/call result for a RETURNS TABLE function is a JSON
+    # OBJECT {"columns": [...], "rows": [[...], ...]} — column-oriented, not a list of row-dicts, and
+    # NOT the CSV shape enrich_indicator's own server uses (a separate, unrelated code path).
+    text = json.dumps({"columns": ["indicator_value", "campaign_id"],
+                       "rows": [["x", "camp-1"]], "is_truncated": False})
+    client = FakeMCPClient(text)
+    fn = make_mcp_tool_fn({"pivot_indicator": (client, "cat__sch__pivot_indicator")})
     assert fn("pivot_indicator", "x") == [{"indicator_value": "x", "campaign_id": "camp-1"}]
 
 
-def test_pivot_indicator_result_json_also_works():
+def test_pivot_indicator_result_plain_json_list_also_works():
     client = FakeMCPClient(json.dumps([{"indicator_value": "x", "campaign_id": "camp-1"}]))
-    fn = make_mcp_tool_fn({"pivot_indicator": client})
+    fn = make_mcp_tool_fn({"pivot_indicator": (client, "cat__sch__pivot_indicator")})
     assert fn("pivot_indicator", "x") == [{"indicator_value": "x", "campaign_id": "camp-1"}]
+
+
+def test_pivot_indicator_result_raises_loudly_on_an_unrecognized_shape():
+    client = FakeMCPClient(json.dumps({"unexpected": "shape"}))
+    fn = make_mcp_tool_fn({"pivot_indicator": (client, "cat__sch__pivot_indicator")})
+    try:
+        fn("pivot_indicator", "x")
+        assert False, "expected a ValueError"
+    except ValueError:
+        pass
 
 
 def test_unconfigured_tool_returns_error_without_raising():

@@ -84,11 +84,15 @@ def ensure_connection(w: WorkspaceClient, name: str, *, mcp_app_url: str, sp_cli
     from urllib.parse import urlparse
     parsed = urlparse(mcp_app_url)
     options = {
-        "host": parsed.hostname,
+        # "host" must be the FULL url including scheme (e.g. "https://host"), not a bare hostname —
+        # verified live: a bare hostname fails with "Missing cloud file system scheme"; every working
+        # HTTP/MCP connection in the account carries the scheme (confirmed by inspecting several).
+        "host": f"{parsed.scheme}://{parsed.hostname}",
         "port": str(parsed.port or 443),
         "base_path": parsed.path or "/",
         "client_id": sp_client_id,
         "client_secret": sp_secret,
+        "oauth_scope": "all-apis",
         "token_endpoint": token_endpoint,
     }
     try:

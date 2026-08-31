@@ -68,8 +68,8 @@ def test_make_investigation_deps_routes_the_5_tools_correctly(investigations_mod
     monkeypatch.setattr(
         lib.mcp_tools, "make_mcp_clients",
         lambda workspace, catalog, schema: {
-            "enrich_indicator": FakeMCPClient("enrich_indicator"),
-            "pivot_indicator": FakeMCPClient("pivot_indicator"),
+            "enrich_indicator": (FakeMCPClient("enrich_indicator"), "enrich_indicator"),
+            "pivot_indicator": (FakeMCPClient("pivot_indicator"), f"{catalog}__{schema}__pivot_indicator"),
         })
     monkeypatch.setattr(lib.llm, "GatewayLLM", FakeGatewayLLM)
 
