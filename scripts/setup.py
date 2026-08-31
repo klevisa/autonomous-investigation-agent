@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # repo root, so databricks_ops imports
-from databricks_ops import config, dbx, lakebase, grants   # noqa: E402
+from databricks_ops import config, dbx, lakebase, grants, mcp_connection   # noqa: E402
 from bundle import run_bundle   # sibling module in scripts/ (this file is run as `python3 scripts/setup.py`)
 
 JOB_MODES = ("job", "job_warehouse")
@@ -80,6 +80,16 @@ def main() -> None:
     else:
         print("== 3. (in_process) no user-side grants — the ADMIN adds the app SP to the AIA role "
               "post-deploy (see README) ==")
+
+    print("== 4. provision the UC HTTP Connection + MCP Service for enrich_indicator ==")
+    app_url = w.apps.get(name=app_name).url
+    catalog = cfg.get("CATALOG") or sys.exit("config.yml: catalog is empty")
+    schema = cfg.get("SCHEMA") or sys.exit("config.yml: schema is empty")
+    result = mcp_connection.provision(
+        w, agent_mode=mode, app_name=app_name, job_sp_client_id=job_sp, catalog=catalog, schema=schema,
+        custom_mcp_app_url=f"{app_url.rstrip('/')}/mcp/")   # trailing slash: avoids the app's own
+                                                             # Mount 307-redirect (verified empirically)
+    print(f"   {result}")
 
     print(f"\n== setup complete ==\n{a.target} is live — the app picks up Lakebase + resolves the role id on "
           f"its next request (no restart).")

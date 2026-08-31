@@ -193,15 +193,25 @@ def trigger_investigation(case_id):
 
 # ── in_process mode ─────────────────────────────────────────────────────────────────────────────
 def _make_investigation_deps():
-    """Build the (tool_fn, llm_fn) an in-process investigation needs: UC-function TOOLs on the warehouse,
-    run with the app's OWN SP identity (a member of the AIA role, so it inherits the tool grants and holds
-    warehouse CAN_USE), and the LLM via the gateway. Built per run (cheap)."""
+    """Build the (tool_fn, llm_fn) an in-process investigation needs. Three tool-delivery variations,
+    side by side, over the SAME 5 UC functions (no new capability, no changed data):
+      * blast_radius / get_account_risk / get_account_actions — unchanged direct UC SQL, on the
+        warehouse, run with the app's OWN SP identity (a member of the AIA role, so it inherits the
+        tool grants and holds warehouse CAN_USE).
+      * pivot_indicator — Databricks managed MCP; the app's ambient WorkspaceClient identity already
+        has EXECUTE on the function via AIA-role membership, enforced natively per caller.
+      * enrich_indicator — the custom MCP server (app/mcp_server.py) behind a UC HTTP Connection +
+        MCP Service (databricks_ops/mcp_connection.py) — the door-key model (see README).
+    Built per run (cheap)."""
     from lib.tools import WarehouseSqlRunner, make_tool_fn
+    from lib.mcp_tools import make_mcp_tool_fn, make_mcp_clients, make_routed_tool_fn
     from lib.llm import GatewayLLM
     from lib.investigator import MAX_TOKENS
     if not WAREHOUSE_ID:
         raise RuntimeError("AIA_WAREHOUSE_ID is not set — required for in_process mode (warehouse tools).")
-    tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
+    sql_tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
+    mcp_tool_fn = make_mcp_tool_fn(make_mcp_clients(_w, CATALOG, SCHEMA))
+    tool_fn = make_routed_tool_fn(sql_tool_fn, mcp_tool_fn)
     llm = GatewayLLM()
     # no temperature: reasoning models (Claude Opus 5) reject it; the gateway defaults are fine.
     llm_fn = lambda messages, tools: llm.chat(messages, tools=tools, max_tokens=MAX_TOKENS)

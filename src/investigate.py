@@ -85,6 +85,7 @@ dbutils.widgets.text("case_scenario_label", "")
 # package from site-packages. See pyproject.toml.
 from lib.llm import GatewayLLM
 from lib.tools import SparkSqlRunner, WarehouseSqlRunner, make_tool_fn
+from lib.mcp_tools import make_mcp_tool_fn, make_mcp_clients, make_routed_tool_fn
 from lib.investigator import Investigator, MAX_TOKENS
 from lib import journal
 from lib.pg import make_pg_connect
@@ -168,11 +169,17 @@ print(f"journal: {journal.STARTED} appended for {INV_ID}")
 if AGENT_MODE == "job_warehouse":
     if not WAREHOUSE_ID:
         raise ValueError("warehouse_id is required in job_warehouse mode (tools run on the warehouse).")
-    tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
+    sql_tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
     print(f"tools: WarehouseSqlRunner on {WAREHOUSE_ID} (job_warehouse — spark session unused)")
 else:
-    tool_fn = make_tool_fn(SparkSqlRunner(spark), CATALOG, SCHEMA)
+    sql_tool_fn = make_tool_fn(SparkSqlRunner(spark), CATALOG, SCHEMA)
     print("tools: SparkSqlRunner on the job's own Spark session (job)")
+# pivot_indicator (Databricks managed MCP) and enrich_indicator (the custom MCP server behind a UC
+# Connection + MCP Service) — both authenticate as the job SP, the SAME ambient `_w` used above; this
+# never touches a warehouse (Databricks-managed serverless compute), so it's free in plain `job` mode.
+mcp_tool_fn = make_mcp_tool_fn(make_mcp_clients(_w, CATALOG, SCHEMA))
+tool_fn = make_routed_tool_fn(sql_tool_fn, mcp_tool_fn)
+print("tools: pivot_indicator via managed MCP, enrich_indicator via custom MCP (UC connection)")
 llm = GatewayLLM()                                   # URL from env; token via AWS Secrets Manager (lib/llm.py)
 # no temperature: reasoning models (Claude Opus 5) reject it; the gateway defaults are fine.
 llm_fn = lambda messages, tools: llm.chat(messages, tools=tools, max_tokens=MAX_TOKENS)

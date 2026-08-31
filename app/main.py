@@ -19,7 +19,7 @@ the append-only journal, reconciled in by the app), `job` (same, on the job's ow
 app/investigations.py. On startup the app reconciles any investigations left 'running' by a crash/restart —
 that (Lakebase-as-queue + reconcile) is what makes the design durable.
 """
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder   # serializes datetime/Decimal from Lakebase rows
@@ -27,6 +27,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from app import investigations
 from app import ui
+from app.mcp_server import mcp_server
 from lib import resolve
 
 
@@ -47,10 +48,16 @@ async def lifespan(app):
         investigations.start_journal_poll()
     except Exception as e:
         print(f"[startup] journal poll failed to start (continuing): {e}")
-    yield
+    # MCP: the enrich_indicator server mounted below. Starlette does NOT auto-run a mounted sub-app's own
+    # lifespan, so FastMCP's streamable-HTTP session manager must be entered explicitly here — this is the
+    # documented mount pattern (modelcontextprotocol/python-sdk), not a home-grown workaround.
+    async with AsyncExitStack() as stack:
+        await stack.enter_async_context(mcp_server.session_manager.run())
+        yield
 
 
 app = FastAPI(title="AIA Investigation Console", version="1.0", lifespan=lifespan)
+app.mount("/mcp", mcp_server.streamable_http_app())
 
 
 # ============================== API (Tines-facing) =================================================
