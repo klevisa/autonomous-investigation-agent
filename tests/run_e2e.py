@@ -117,9 +117,14 @@ class Run:
         rc = subprocess.run(self.run_all_argv(), env=self._env()).returncode
         return rc == 0
 
-    def teardown(self) -> None:
+    def teardown(self) -> bool:
         print(c(f"  tearing down {self.config_file} …", "dim"))
-        subprocess.run([PY, "-m", "tests.e2e.teardown"], env=self._env())
+        rc = subprocess.run([PY, "-m", "tests.e2e.teardown"], env=self._env()).returncode
+        if rc != 0:
+            print(c(f"  ✗ teardown FAILED (rc={rc}) for {self.config_file} — resources may be left dangling.",
+                     "red"))
+            print(c(f"    re-run manually: {self.teardown_cmd()}", "yellow"))
+        return rc == 0
 
     def teardown_cmd(self) -> str:
         return f"AIA_CONFIG={self.config_file} python3 -m tests.e2e.teardown"
@@ -248,14 +253,15 @@ def main() -> None:
     preflight(runs)
 
     results: list[tuple[Run, bool]] = []
+    teardown_failures: list[Run] = []
     started = time.time()
     for r in runs:
         ok = r.execute()
         results.append((r, ok))
         if ok:
             print(c(f"\n  RUN {r.label} — PASSED", "green"))
-            if not args.keep:
-                r.teardown()
+            if not args.keep and not r.teardown():
+                teardown_failures.append(r)
         else:
             print(c(f"\n  RUN {r.label} — FAILED", "red"))
             print(c(f"  STOPPING. Environment left live for inspection. Tear it down with:", "yellow"))
@@ -275,10 +281,17 @@ def main() -> None:
     elapsed = int(time.time() - started)
     all_ok = results and all(o for _, o in results) and len(results) == len(runs)
     print(f"\n  {len(results)}/{len(runs)} runs executed · {elapsed // 60}m{elapsed % 60}s")
-    if all_ok:
+    if teardown_failures:
+        print(c(f"\n  ✗ TEARDOWN FAILED for {len(teardown_failures)} run(s) — resources left dangling:", "red"))
+        for r in teardown_failures:
+            print(f"    {r.label}  →  {r.teardown_cmd()}")
+    if all_ok and not teardown_failures:
         print(c("  ALL GREEN — full e2e passed; all environments torn down." if not args.keep
                 else "  ALL GREEN — full e2e passed; environments left up (--keep).", "green"))
         sys.exit(0)
+    if all_ok:
+        print(c("  E2E SCENARIOS PASSED but teardown left resources behind — see above.", "red"))
+        sys.exit(1)
     print(c("  E2E FAILED — see the failing run above.", "red"))
     sys.exit(1)
 
