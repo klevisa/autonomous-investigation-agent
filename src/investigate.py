@@ -230,6 +230,21 @@ except Exception as _e:
 journal.append_event(_journal, INV_ID, journal.COMPLETED, JOB_RUN_ID, case_id=CASE_ID, verdict=verdict)
 print(f"journal: {journal.COMPLETED} appended for {INV_ID}")
 print(json.dumps(verdict, indent=2, default=str))
-dbutils.notebook.exit(json.dumps({"investigation_id": INV_ID, "case_id": CASE_ID,
-                                  "assessed_severity": verdict.get("assessed_severity"),
-                                  "escalate_to_high": bool(verdict.get("escalate_to_high"))}))
+
+# The run's OUTPUT tab shows exactly the dbutils.notebook.exit() value (notebook cell stdout — the
+# per-turn agent trail above — may not surface for serverless notebook tasks). So exit with the FULL
+# verdict: the LLM's decision + summary + rationale, the tools it called, and each tool's returned
+# evidence. That way the whole investigation (the LLM output AND every tool call's result) is visible
+# right on the job run, not only in the mlflow trace. Nothing parses this value (the app applies the
+# verdict from the journal, not here), so it's free to be human-readable.
+dbutils.notebook.exit(json.dumps({
+    "investigation_id": INV_ID, "case_id": CASE_ID,
+    "assessed_severity": verdict.get("assessed_severity"),
+    "escalate_to_high": bool(verdict.get("escalate_to_high")),
+    "recommended_play": verdict.get("recommended_play"),
+    "confidence": verdict.get("confidence"),
+    "summary": verdict.get("summary"),
+    "rationale": verdict.get("rationale"),
+    "tools_called": verdict.get("tools_called"),
+    "evidence": verdict.get("evidence"),
+}, indent=2, default=str))

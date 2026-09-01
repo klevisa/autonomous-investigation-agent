@@ -96,3 +96,19 @@ def test_multiple_tool_calls_in_one_turn_all_recorded():
     out = agent.run([{"role": "user", "content": "go"}])
     assert out["tools_called"] == ["enrich_indicator", "enrich_indicator"]
     assert out["evidence"]["enrich_indicator"] == [{"got": "x"}, {"got": "y"}]
+
+
+def test_logs_llm_text_and_each_tool_call_to_stdout(capsys):
+    # The turn-by-turn trail must reach STDOUT (not just mlflow spans) so it shows in the JOB RUN output
+    # and the app logs, where an operator looks first. Assert each tool call, its result, and the final
+    # answer are printed.
+    llm = ScriptedLLM([_tool_call("enrich_indicator", {"indicator": "http://bad.example/x"}),
+                       _final("ESCALATE: known-bad indicator")])
+    agent = ToolWieldingAgent(llm, tool_specs=[], tool_fn=lambda n, a: [{"query_status": "ok"}])
+    agent.run([{"role": "user", "content": "go"}])
+    out = capsys.readouterr().out
+    assert "call enrich_indicator" in out              # the tool call + its args
+    assert "enrich_indicator →" in out                  # the tool result line
+    assert "query_status" in out                        # the actual returned rows
+    assert "ESCALATE: known-bad indicator" in out       # the LLM's final text
+    assert "converged after 2 turn(s)" in out
