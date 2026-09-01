@@ -338,6 +338,15 @@ resources:
               # boto3 — fetch the LLM gateway token from AWS Secrets Manager (STS creds from the UC service
               # credential; see lib/llm.py). Installs on serverless via the internal PyPI proxy (no C ext).
               - boto3
+              # MCP tool routing (see README): pivot_indicator via Databricks managed MCP, enrich_indicator
+              # via the custom MCP server behind a UC Connection — both through lib/mcp_tools.py's
+              # DatabricksMCPClient. The job is an MCP *client* only (no `mcp` server package needed here).
+              - databricks-mcp
+              # nest_asyncio — the job notebook runs under an ambient event loop, and DatabricksMCPClient
+              # calls asyncio.run() internally; nest_asyncio makes that re-entrant so the MCP tool calls
+              # work with a plain blocking call (see src/investigate.py). App-side (in_process) doesn't need
+              # it — investigations run on a background thread there — so it's not in requirements.txt.
+              - nest_asyncio
               # aia-lib wheel (artifacts.aia_lib) — provides lib.* (orchestrator, journal, llm, pg, …) from
               # site-packages, so the agent never reads lib/*.py off the /Workspace FUSE mount.
               - ./dist/*.whl

@@ -106,9 +106,25 @@ def get_case(case_id):
 def investigations_for(case_id):
     return _query("""SELECT investigation_id, status, assessed_severity, escalate_to_high,
                             recommended_play, confidence, summary, rationale, evidence, tools_called,
-                            model_endpoint, started_at, finished_at
+                            model_endpoint, job_run_id, started_at, finished_at
                      FROM investigations WHERE case_id = %s
                      ORDER BY started_at DESC NULLS LAST""", (case_id,))
+
+
+def job_run_url(job_run_id):
+    """The Databricks Jobs UI URL for an investigation's triggering run, or None. Only job/job_warehouse
+    investigations HAVE a run (in_process runs in the app thread and stores no run id), so this returns
+    None for in_process — the UI then simply omits the link. Best-effort: any resolution failure (job not
+    found, Jobs API blip) yields None rather than breaking the page."""
+    if not job_run_id or not IS_JOB:
+        return None
+    try:
+        job_id = _resolve_investigate_job_id()
+        host = _w.config.host.rstrip("/")
+        return f"{host}/jobs/{job_id}/runs/{job_run_id}?o={_w.get_workspace_id()}"
+    except Exception as e:
+        print(f"[ui] could not build job run url for {job_run_id}: {e}")
+        return None
 
 
 def latest_investigation(case_id):
@@ -194,15 +210,25 @@ def trigger_investigation(case_id):
 
 # ── in_process mode ─────────────────────────────────────────────────────────────────────────────
 def _make_investigation_deps():
-    """Build the (tool_fn, llm_fn) an in-process investigation needs: UC-function TOOLs on the warehouse,
-    run with the app's OWN SP identity (a member of the AIA role, so it inherits the tool grants and holds
-    warehouse CAN_USE), and the LLM via the gateway. Built per run (cheap)."""
+    """Build the (tool_fn, llm_fn) an in-process investigation needs. Three tool-delivery variations,
+    side by side, over the SAME 5 UC functions (no new capability, no changed data):
+      * blast_radius / get_account_risk / get_account_actions — unchanged direct UC SQL, on the
+        warehouse, run with the app's OWN SP identity (a member of the AIA role, so it inherits the
+        tool grants and holds warehouse CAN_USE).
+      * pivot_indicator — Databricks managed MCP; the app's ambient WorkspaceClient identity already
+        has EXECUTE on the function via AIA-role membership, enforced natively per caller.
+      * enrich_indicator — the custom MCP server (app/mcp_server.py) behind a UC HTTP Connection +
+        MCP Service (databricks_ops/mcp_connection.py) — the door-key model (see README).
+    Built per run (cheap)."""
     from lib.tools import WarehouseSqlRunner, make_tool_fn
+    from lib.mcp_tools import make_mcp_tool_fn, make_mcp_clients, make_routed_tool_fn
     from lib.llm import GatewayLLM
     from lib.investigator import MAX_TOKENS
     if not WAREHOUSE_ID:
         raise RuntimeError("AIA_WAREHOUSE_ID is not set — required for in_process mode (warehouse tools).")
-    tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
+    sql_tool_fn = make_tool_fn(WarehouseSqlRunner(_w, WAREHOUSE_ID), CATALOG, SCHEMA)
+    mcp_tool_fn = make_mcp_tool_fn(make_mcp_clients(_w, CATALOG, SCHEMA))
+    tool_fn = make_routed_tool_fn(sql_tool_fn, mcp_tool_fn)
     llm = GatewayLLM()
     # no temperature: reasoning models (Claude Opus 5) reject it; the gateway defaults are fine.
     llm_fn = lambda messages, tools: llm.chat(messages, tools=tools, max_tokens=MAX_TOKENS)

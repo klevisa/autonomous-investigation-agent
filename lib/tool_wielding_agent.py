@@ -49,6 +49,22 @@ except Exception:  # pragma: no cover — mlflow absent; tracing becomes a no-op
         yield _Noop()
 
 
+# Human-readable progress to STDOUT, in addition to the mlflow spans above. mlflow traces are great in the
+# experiment UI, but the JOB RUN's own output (and the app logs) otherwise show only the final verdict — so
+# the turn-by-turn LLM text and each tool call/result are invisible where an operator actually looks first.
+# These prints put that reasoning trail in the run output too. flush=True so lines land in notebook/job
+# stdout in loop order rather than buffered to the end.
+def _log(msg):
+    print(msg, flush=True)
+
+
+def _short(obj, limit=1500):
+    """A compact one-string form of a message/args/rows for logging — truncated so a chatty turn or a big
+    evidence blob can't flood the run output (the full data is in the mlflow span / the verdict evidence)."""
+    s = obj if isinstance(obj, str) else json.dumps(obj, default=str)
+    return s if len(s) <= limit else f"{s[:limit]}… (+{len(s) - limit} more chars)"
+
+
 class ToolWieldingAgent:
     """The bounded tool-calling loop. Construct with the LLM + tools, then `run(messages)`.
 
@@ -88,18 +104,26 @@ class ToolWieldingAgent:
                 choice = resp["choices"][0]
                 message = choice.get("message", {})
                 span.set_outputs({"finish_reason": choice.get("finish_reason"), "message": message})
+            # The model often emits reasoning text alongside a tool call, and always on the final turn.
+            content = message.get("content")
+            if content:
+                _log(f"[agent] turn {turn} · LLM:\n{_short(content)}")
             if choice.get("finish_reason") == "tool_calls":
                 messages.append(message)
                 for call in message.get("tool_calls", []):
                     name = call["function"]["name"]
                     args = json.loads(call["function"].get("arguments") or "{}")
+                    _log(f"[agent] turn {turn} · call {name}({_short(args, 400)})")
                     rows = self._run_tool(name, args)
+                    _log(f"[agent] turn {turn} · {name} → {_short(rows)}")
                     tools_called.append(name)
                     evidence.setdefault(name, []).extend(rows)
                     messages.append({"role": "tool", "tool_call_id": call["id"],
                                      "content": json.dumps(rows, default=str)})
             else:
+                _log(f"[agent] converged after {turn + 1} turn(s); tools called: {tools_called}")
                 return {"content": message.get("content", ""), "evidence": evidence,
                         "tools_called": tools_called, "converged": True}
+        _log(f"[agent] did NOT converge within {self._max_turns} turns; tools called: {tools_called}")
         return {"content": None, "evidence": evidence,
                 "tools_called": tools_called, "converged": False}

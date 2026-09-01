@@ -145,6 +145,11 @@ def case_detail(case, inv, all_invs):
         conf_s = f"{float(conf):.0%}" if conf not in (None, "") else "—"
         evidence = json.dumps(inv.get("evidence", {}), indent=2, default=str)
         tools = ", ".join(inv.get("tools_called", [])) or "—"
+        # Job run link — present only for job/job_warehouse investigations (in_process has no run; the
+        # route leaves job_run_url None, so this row is simply omitted). Opens the Databricks run page.
+        run_url = inv.get("job_run_url")
+        run_row = (f'<div class="k">Job run</div><div><a href="{_esc(run_url)}" target="_blank" '
+                   f'rel="noopener">open in Databricks ↗</a></div>' if run_url else "")
         body = f"""<div class="card"><h3>Latest investigation · {_esc(inv['investigation_id'] if inv.get('investigation_id') else '')} <span style="color:#5a6474;font-weight:400">({_esc(inv['status'])})</span></h3>
           <div class="kv">
             <div class="k">Assessed severity</div><div>{sev_chip(inv.get('assessed_severity'))}</div>
@@ -155,18 +160,24 @@ def case_detail(case, inv, all_invs):
             <div class="k">Rationale</div><div>{_esc(inv.get('rationale'))}</div>
             <div class="k">Tools called</div><div class="mono">{_esc(tools)}</div>
             <div class="k">Model endpoint</div><div class="mono">{_esc(inv.get('model_endpoint'))}</div>
+            {run_row}
           </div>
           <h3 style="margin-top:18px">Evidence trail</h3><pre>{_esc(evidence)}</pre>
         </div>"""
         if len(all_invs) > 1:
+            def _run_cell(i):
+                u = i.get("job_run_url")
+                return (f'<a href="{_esc(u)}" target="_blank" rel="noopener">run ↗</a>' if u
+                        else '<span style="color:#5a6474">—</span>')
             hist = "".join(f'<tr><td class="mono">{_esc(i.get("investigation_id"))}</td>'
                            f'<td>{status_chip(i.get("status"))}</td>'
                            f'<td>{sev_chip(i.get("assessed_severity"))}</td>'
                            f'<td class="mono">{_esc(i.get("recommended_play"))}</td>'
-                           f'<td class="mono">{_esc(i.get("finished_at"))}</td></tr>' for i in all_invs)
+                           f'<td class="mono">{_esc(i.get("finished_at"))}</td>'
+                           f'<td>{_run_cell(i)}</td></tr>' for i in all_invs)
             body += f"""<div class="card"><h3>Investigation history ({len(all_invs)})</h3>
               <table><thead><tr><th>ID</th><th>Status</th><th>Assessed</th><th>Play</th><th>Finished</th>
-              </tr></thead><tbody>{hist}</tbody></table></div>"""
+              <th>Job run</th></tr></thead><tbody>{hist}</tbody></table></div>"""
 
     js = f"""<script>
       async function run(id, btn) {{ btn.disabled=true; btn.textContent='starting…';

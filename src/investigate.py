@@ -40,6 +40,16 @@ import json
 import mlflow
 from databricks.sdk import WorkspaceClient
 
+# The MCP-routed tools (enrich_indicator via the custom MCP server behind the UC connection,
+# pivot_indicator via managed MCP) reach their servers through DatabricksMCPClient, which calls
+# asyncio.run() internally. This notebook runs under an ambient event loop (ipykernel/serverless), so a
+# bare asyncio.run() raises "cannot be called from a running event loop". nest_asyncio makes asyncio.run
+# re-entrant on the already-running loop, so lib/mcp_tools can make a plain BLOCKING call with no thread
+# juggling — sequential tool use is exactly what an investigation wants. (The app doesn't need this: it
+# runs each investigation on its own background thread, which has no loop — see app/investigations.py.)
+import nest_asyncio
+nest_asyncio.apply()
+
 # COMMAND ----------
 dbutils.widgets.text("catalog", "")   # the DAB passes ${var.catalog}
 dbutils.widgets.text("schema", "")    # the DAB passes ${var.schema}
@@ -85,6 +95,7 @@ dbutils.widgets.text("case_scenario_label", "")
 # package from site-packages. See pyproject.toml.
 from lib.llm import GatewayLLM
 from lib.tools import make_sql_runner, make_tool_fn
+from lib.mcp_tools import make_mcp_tool_fn, make_mcp_clients, make_routed_tool_fn
 from lib.investigator import Investigator, MAX_TOKENS
 from lib import journal
 from lib.pg import make_pg_connect
@@ -165,11 +176,20 @@ print(f"journal: {journal.STARTED} appended for {INV_ID}")
 #                    query off the (idle) job compute. The `spark` session is NOT used at all in this mode;
 #                    the runner uses the ambient WorkspaceClient (_w = the job SP), which needs the role's
 #                    warehouse CAN_USE (granted to the group in admin_prereqs, inherited by membership).
+# The SQL-delivered tools (blast_radius, get_account_risk, get_account_actions) run on the warehouse
+# (job_warehouse) or the job's own Spark session (job) — make_sql_runner picks, mirroring the mode split
+# and validating warehouse_id (extracted to lib/tools so it's unit-testable — this file is a notebook).
 sql = make_sql_runner(AGENT_MODE, spark=spark, workspace=_w, warehouse_id=WAREHOUSE_ID)
-tool_fn = make_tool_fn(sql, CATALOG, SCHEMA)
+sql_tool_fn = make_tool_fn(sql, CATALOG, SCHEMA)
 print(f"tools: {type(sql).__name__} "
       + (f"on {WAREHOUSE_ID} (job_warehouse — spark session unused)" if AGENT_MODE == "job_warehouse"
          else "on the job's own Spark session (job)"))
+# pivot_indicator (Databricks managed MCP) and enrich_indicator (the custom MCP server behind a UC
+# Connection + MCP Service) — both authenticate as the job SP, the SAME ambient `_w` used above; this
+# never touches a warehouse (Databricks-managed serverless compute), so it's free even in plain `job` mode.
+mcp_tool_fn = make_mcp_tool_fn(make_mcp_clients(_w, CATALOG, SCHEMA))
+tool_fn = make_routed_tool_fn(sql_tool_fn, mcp_tool_fn)
+print("tools: pivot_indicator via managed MCP, enrich_indicator via custom MCP (UC connection)")
 llm = GatewayLLM()                                   # URL from env; token via AWS Secrets Manager (lib/llm.py)
 # no temperature: reasoning models (Claude Opus 5) reject it; the gateway defaults are fine.
 llm_fn = lambda messages, tools: llm.chat(messages, tools=tools, max_tokens=MAX_TOKENS)
@@ -210,6 +230,21 @@ except Exception as _e:
 journal.append_event(_journal, INV_ID, journal.COMPLETED, JOB_RUN_ID, case_id=CASE_ID, verdict=verdict)
 print(f"journal: {journal.COMPLETED} appended for {INV_ID}")
 print(json.dumps(verdict, indent=2, default=str))
-dbutils.notebook.exit(json.dumps({"investigation_id": INV_ID, "case_id": CASE_ID,
-                                  "assessed_severity": verdict.get("assessed_severity"),
-                                  "escalate_to_high": bool(verdict.get("escalate_to_high"))}))
+
+# The run's OUTPUT tab shows exactly the dbutils.notebook.exit() value (notebook cell stdout — the
+# per-turn agent trail above — may not surface for serverless notebook tasks). So exit with the FULL
+# verdict: the LLM's decision + summary + rationale, the tools it called, and each tool's returned
+# evidence. That way the whole investigation (the LLM output AND every tool call's result) is visible
+# right on the job run, not only in the mlflow trace. Nothing parses this value (the app applies the
+# verdict from the journal, not here), so it's free to be human-readable.
+dbutils.notebook.exit(json.dumps({
+    "investigation_id": INV_ID, "case_id": CASE_ID,
+    "assessed_severity": verdict.get("assessed_severity"),
+    "escalate_to_high": bool(verdict.get("escalate_to_high")),
+    "recommended_play": verdict.get("recommended_play"),
+    "confidence": verdict.get("confidence"),
+    "summary": verdict.get("summary"),
+    "rationale": verdict.get("rationale"),
+    "tools_called": verdict.get("tools_called"),
+    "evidence": verdict.get("evidence"),
+}, indent=2, default=str))

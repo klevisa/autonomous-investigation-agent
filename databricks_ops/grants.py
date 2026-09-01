@@ -12,12 +12,21 @@ The role model (see README "Identity & permissions"):
                (lib/journal.py), whose INSERT grant is issued by src/build_structure.py.
 
 The role's own data grants (evidence SELECT / tool EXECUTE) and both SPs' group membership are set by the
-ADMIN out of band. All grants here are typed SDK methods.
+ADMIN out of band. Most grants here are typed SDK methods; grant_sp_execute_on_mcp_service is raw REST
+(see its own docstring — MCP Services are new enough there's no confirmed typed SDK coverage yet).
+
+MCP tool-routing (databricks_ops/mcp_connection.py) adds two more grants, for whichever SP is the
+deployed stack's investigation-time caller (app SP for in_process, job SP otherwise):
+  grant_sp_can_use_app             — lets that SP's OAuth M2M credential (embedded in the UC connection)
+                                      past the app's own OAuth edge (the "door key" — see README).
+  grant_sp_execute_on_mcp_service  — lets that SP actually invoke the enrich_indicator MCP Service.
+                                      NEVER grant USE CONNECTION instead — that would let the grantee
+                                      bypass tool selection and call the backend directly.
 """
 from __future__ import annotations
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import jobs
+from databricks.sdk.service import apps, jobs
 
 
 def grant_app_can_manage_run_on_job(w: WorkspaceClient, job_id: int, app_sp_app_id: str) -> None:
@@ -52,3 +61,30 @@ def grant_dir_read(w: WorkspaceClient, dir_path: str, job_sp_app_id: str) -> Non
 # grant_app_can_manage_run_on_job + grant_dir_read. in_process needs none of these (the app SP's role
 # membership + direct warehouse grant are done by the admin post-deploy, admin_postdeploy). Keeping that
 # sequencing in the recipe (not a composite function here) is deliberate: the step order should be legible.
+
+
+def grant_sp_can_use_app(w: WorkspaceClient, app_name: str, sp_app_id: str) -> None:
+    """MCP tool routing: let the SP embedded in the UC connection (databricks_ops/mcp_connection.py)
+    past the app's own OAuth-M2M edge. update_permissions (additive), matching grant_app_can_manage_run_on_job's
+    style — this must not reset the app's existing ACL."""
+    w.apps.update_permissions(
+        app_name=app_name,
+        access_control_list=[apps.AppAccessControlRequest(
+            service_principal_name=sp_app_id, permission_level=apps.AppPermissionLevel.CAN_USE)])
+
+
+def grant_sp_execute_on_mcp_service(w: WorkspaceClient, catalog: str, schema: str, service_name: str,
+                                    sp_app_id: str) -> None:
+    """MCP tool routing: let the SP invoke the enrich_indicator MCP Service. Raw REST — MCP Services are
+    new enough that (as of this writing) there's no confirmed typed SDK grant method, mirroring
+    databricks_ops/lakebase.py's precedent for SDK-uncovered UC surfaces. VERIFY LIVE: the exact
+    securable_type path segment ("mcp-service", by analogy with the /mcp-services collection and other
+    UC permission paths like .../permissions/function/...) against
+    docs.databricks.com/aws/en/ai-gateway/register-mcp-service, which confirms the body shape
+    ({"changes": [{"principal": ..., "add": ["EXECUTE"]}]}) but not the exact path segment.
+
+    NEVER grant USE CONNECTION here instead — the docs explicitly warn it lets the grantee bypass tool
+    selection and call the backend directly."""
+    full_name = f"{catalog}.{schema}.{service_name}"
+    w.api_client.do("PATCH", f"/api/2.1/unity-catalog/permissions/mcp-service/{full_name}",
+                    body={"changes": [{"principal": sp_app_id, "add": ["EXECUTE"]}]})

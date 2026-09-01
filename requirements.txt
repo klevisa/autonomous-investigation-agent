@@ -17,3 +17,12 @@ uvicorn[standard]
 databricks-sdk>=0.98.0
 pg8000
 boto3
+# MCP tool routing (this branch's showcase — see README): app/mcp_server.py is the custom enrich_indicator
+# server; lib/mcp_tools.py's DatabricksMCPClient calls both it and the managed pivot_indicator server.
+mcp>=1.9,<2
+databricks-mcp
+# enrich_indicator's UC-function execution inside app/mcp_server.py — serverless generic compute (Spark
+# Connect serverless), NOT a warehouse. databricks-connect is what actually provides that Spark Connect
+# session; unitycatalog-ai's DatabricksFunctionClient needs it present to use execution_mode="serverless".
+unitycatalog-ai[databricks]
+databricks-connect>=15.1.0

@@ -30,6 +30,11 @@ always in charge of state.
 This is a **template** — nothing is hardcoded to a workspace. You supply every value. The bundled demo data is
 for evaluation only; in production it is replaced by AIA's real evidence tables and live Tines cases.
 
+> **This branch (`feature/mcp-three-variations`)** showcases 3 tool-delivery mechanisms over the *same* 5 UC
+> functions — direct SQL, Databricks managed MCP, and a custom MCP server behind a UC Connection — with no
+> new capability and no changed data. See [Three ways to call the same tool](#three-ways-to-call-the-same-tool-this-branchs-mcp-showcase).
+> `main` is unaffected; whether this becomes the default is still an open decision.
+
 ---
 
 **Contents**
@@ -357,6 +362,26 @@ These are separate from the app's reconcile cap (`AIA_MAX_ATTEMPTS`, default 3),
 *orphaned* run is re-fired before the case is parked `needs_review`. Job retries handle "the attempt failed but
 compute survived"; reconcile handles "the whole run or the app died."
 
+### Three ways to call the same tool (this branch's MCP showcase)
+
+`feature/mcp-three-variations` doesn't add a new capability — it changes *how* the agent reaches 2 of its 5
+existing tools, so the same UC functions and the same evidence are reachable three different ways side by side:
+
+| Tool | Delivery | Hosting | Governed by |
+|---|---|---|---|
+| `blast_radius`, `get_account_risk`, `get_account_actions` | Direct UC SQL (unchanged) | n/a — `make_tool_fn` | AIA-role membership, as today |
+| `pivot_indicator` | **Databricks managed MCP** | Databricks (`/api/2.0/mcp/functions/...`) | The caller's own AIA-role `EXECUTE` grant — enforced natively, no new grant |
+| `enrich_indicator` | **Custom MCP server** (`app/mcp_server.py`) | This app, at `/mcp/` | A **UC HTTP Connection + MCP Service** (`databricks_ops/mcp_connection.py`) |
+
+`lib/mcp_tools.py` is the seam: `make_routed_tool_fn` sends `enrich_indicator`/`pivot_indicator` to a
+`DatabricksMCPClient` and the other 3 to the unchanged SQL path; both MCP tools use the *same* client class,
+differing only in `server_url`. Wired into both call sites exactly where the SQL-only `tool_fn` used to be
+built (`app/investigations.py::_make_investigation_deps`, `src/investigate.py`) — nothing about `Investigator`
+or the tool specs the LLM sees changes.
+
+Why `pivot_indicator` and `enrich_indicator` are treated differently despite being "the same kind of tool" is
+the subject of the next section.
+
 ---
 
 ## 4. Identity & permissions
@@ -444,6 +469,35 @@ So `job_warehouse`/`job` do all their identity grants **pre-deploy** (the job SP
 `in_process` shifts the tool-runner grants to **post-deploy** (the app SP is born at deploy). Everything else is
 identical.
 
+### Door-key vs. native per-caller (MCP tool routing)
+
+The two MCP-routed tools ([above](#three-ways-to-call-the-same-tool-this-branchs-mcp-showcase)) get very
+different governance stories, and the difference is structural, not a choice:
+
+- **`pivot_indicator` (managed MCP)** has no proxy in the middle — the caller's own ambient identity (job SP or
+  app SP) hits Databricks' managed endpoint directly, so its *existing* AIA-role `EXECUTE` grant is enforced
+  natively, per call. **Zero new grants.** This is true per-caller enforcement, for free.
+- **`enrich_indicator` (custom MCP)** goes through a UC HTTP Connection, and that connection's proxy
+  **strips the caller's own Databricks credential** before it reaches our app — Databricks Apps has no
+  mechanism to forward an M2M caller's identity into app code (`x-forwarded-access-token` is OBO/human-only,
+  confirmed empirically: it's never populated for a service-principal caller). So the connection's embedded
+  OAuth M2M credential is a **door key, not a per-caller identity**: it's a real, UC-enforced gate on *who may
+  reach the endpoint at all* — but once a request is let in, `app/mcp_server.py` runs the UC function as the
+  **app's own ambient SP**, exactly like every other line of this app.
+
+The connection's embedded SP is **re-provisioned per deploy** from the same `agent_mode` this app already
+reads elsewhere: the **app SP** when `agent_mode=in_process`, the **job SP** otherwise — whichever identity is
+actually the one calling at investigation time in that deployed stack (`databricks_ops/mcp_connection.py`).
+Two grants follow from this, wired by `scripts/setup.py`'s post-deploy step:
+
+| Grant | On | Why |
+|---|---|---|
+| `CAN_USE` | the app | Lets the connection's embedded SP's OAuth M2M credential past the app's own OAuth edge — the door key. |
+| `EXECUTE` | the MCP Service | Lets that SP actually invoke the `enrich_indicator` tool through the service. |
+
+**Never** grant `USE CONNECTION` instead of `EXECUTE` on the service — that would let the grantee call the raw
+backend directly, bypassing tool selection entirely.
+
 ---
 
 ## 5. Reference
@@ -481,13 +535,15 @@ finishes the environment without touching the app.
 databricks.yml            the bundle: build_structure + investigate jobs, the aia_app, the aia_lib wheel
 config.yml.example        the template for config.yml (the single per-env input; config.yml is gitignored)
 app/                      the FastAPI app — orchestrator + state owner
-  main.py                 routes (Tines API + UI), startup reconcile, journal poll
+  main.py                 routes (Tines API + UI), startup reconcile, journal poll, mounts mcp_server at /mcp/
   investigations.py       in_process runner, job trigger, journal apply, reconcile
+  mcp_server.py           the custom MCP server for enrich_indicator (UC function via serverless compute)
   ui.py                   the board + drill-down HTML
 lib/                      shared core, delivered to the app from source and to the jobs as the aia_lib wheel
   investigator.py         the AIA agent: prompt, plays, verdict parsing (pure — no state, no Spark)
   tool_wielding_agent.py  the generic, provider-agnostic tool-calling loop
   tools.py                SqlRunner (Warehouse vs Spark) + the UC-function tool adapter
+  mcp_tools.py            MCP tool routing: DatabricksMCPClient for pivot_indicator (managed) + enrich_indicator (custom)
   state_store.py          cases/investigations on Lakebase + record_verdict + reconcile (app only)
   journal.py              the append-only job→app verdict handoff; authenticity via {{job.run_id}}
   pg.py                   Lakebase connection (pg8000 + per-connection OAuth)
@@ -498,9 +554,10 @@ src/
   investigate.py          the job driver (job modes): tools on Spark or the warehouse → journal
 scripts/                  readable deploy/setup recipes over the databricks_ops SDK helpers
   deploy.py               bundle deploy + start the app (CI does this in prod)
-  setup.py                Lakebase + build_structure + app↔job wiring (once per env, dispatch-only in CI)
+  setup.py                Lakebase + build_structure + app↔job wiring + MCP connection/service (once per env)
   setup_cicd.py           push CI credentials + PROD_* values to GitHub
 databricks_ops/           the SDK-typed functions the scripts call (Lakebase, groups, grants, config)
+  mcp_connection.py       provisions the UC HTTP Connection + MCP Service fronting app/mcp_server.py
 demo/                     the SEPARATE, evaluation-only demo bundle (substrate + tools + 25 cases)
 .github/workflows/        CI/CD — code deploy on merge, Lakebase setup via workflow_dispatch
 tests/                    unit + integration tests and the end-to-end harness (an executable reference)

@@ -21,6 +21,10 @@ dependencies = [
   "databricks-sdk>=0.98.0",
   "pg8000",
   "boto3",
+  # lib/mcp_tools.py's DatabricksMCPClient (MCP tool routing — see README). Neither `mcp` (the server SDK,
+  # app-only) nor `unitycatalog-ai` (app/mcp_server.py's execution client, app-only) belong here — this
+  # module is only ever an MCP *client*.
+  "databricks-mcp",
 ]
 
 [tool.hatch.build.targets.wheel]

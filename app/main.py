@@ -19,7 +19,7 @@ the append-only journal, reconciled in by the app), `job` (same, on the job's ow
 app/investigations.py. On startup the app reconciles any investigations left 'running' by a crash/restart —
 that (Lakebase-as-queue + reconcile) is what makes the design durable.
 """
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder   # serializes datetime/Decimal from Lakebase rows
@@ -27,6 +27,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from app import investigations
 from app import ui
+from app.mcp_server import mcp_server
 from lib import resolve
 
 
@@ -47,10 +48,16 @@ async def lifespan(app):
         investigations.start_journal_poll()
     except Exception as e:
         print(f"[startup] journal poll failed to start (continuing): {e}")
-    yield
+    # MCP: the enrich_indicator server mounted below. Starlette does NOT auto-run a mounted sub-app's own
+    # lifespan, so FastMCP's streamable-HTTP session manager must be entered explicitly here — this is the
+    # documented mount pattern (modelcontextprotocol/python-sdk), not a home-grown workaround.
+    async with AsyncExitStack() as stack:
+        await stack.enter_async_context(mcp_server.session_manager.run())
+        yield
 
 
 app = FastAPI(title="AIA Investigation Console", version="1.0", lifespan=lifespan)
+app.mount("/mcp", mcp_server.streamable_http_app())
 
 
 # ============================== API (Tines-facing) =================================================
@@ -123,6 +130,10 @@ def case_detail(case_id: str):
             return HTMLResponse(ui.page(ui.empty(f"No case {case_id}."), active="board"))
         inv = investigations.latest_investigation(case_id)
         all_invs = investigations.investigations_for(case_id)
+        # Decorate each investigation with its job-run URL (job/job_warehouse only; None in in_process),
+        # so the UI can link straight to the Databricks run without knowing how to build the URL itself.
+        for i in filter(None, [inv, *all_invs]):
+            i["job_run_url"] = investigations.job_run_url(i.get("job_run_id"))
     except Exception as e:
         return HTMLResponse(ui.page(ui.error(e), active="board"))
     return HTMLResponse(ui.page(ui.case_detail(case, inv, all_invs), active="board"))
