@@ -40,6 +40,16 @@ import json
 import mlflow
 from databricks.sdk import WorkspaceClient
 
+# The MCP-routed tools (enrich_indicator via the custom MCP server behind the UC connection,
+# pivot_indicator via managed MCP) reach their servers through DatabricksMCPClient, which calls
+# asyncio.run() internally. This notebook runs under an ambient event loop (ipykernel/serverless), so a
+# bare asyncio.run() raises "cannot be called from a running event loop". nest_asyncio makes asyncio.run
+# re-entrant on the already-running loop, so lib/mcp_tools can make a plain BLOCKING call with no thread
+# juggling — sequential tool use is exactly what an investigation wants. (The app doesn't need this: it
+# runs each investigation on its own background thread, which has no loop — see app/investigations.py.)
+import nest_asyncio
+nest_asyncio.apply()
+
 # COMMAND ----------
 dbutils.widgets.text("catalog", "")   # the DAB passes ${var.catalog}
 dbutils.widgets.text("schema", "")    # the DAB passes ${var.schema}

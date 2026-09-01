@@ -91,6 +91,24 @@ def test_unconfigured_tool_returns_error_without_raising():
     assert fn("enrich_indicator", "x") == [{"error": "no MCP client configured for tool enrich_indicator"}]
 
 
+def test_mcp_tool_fn_calls_the_client_directly_no_thread_juggling():
+    # make_mcp_tool_fn does a plain, blocking client.call_tool() — no threads. The event-loop concern
+    # (DatabricksMCPClient.call_tool uses asyncio.run internally) is handled at the CALL SITES, not here:
+    # the app runs investigations on a background thread (no loop), and the investigate job applies
+    # nest_asyncio (src/investigate.py) so a blocking call works under the notebook's ambient loop.
+    # Verified live in job_warehouse mode after that fix: both MCP tools return real data, agent converges.
+    calls = []
+
+    class RecordingClient:
+        def call_tool(self, name, arguments):
+            calls.append(name)
+            return {"content": [{"text": json.dumps([{"ok": True}])}]}
+
+    fn = make_mcp_tool_fn({"enrich_indicator": (RecordingClient(), "enrich_indicator")})
+    assert fn("enrich_indicator", "x") == [{"ok": True}]
+    assert calls == ["enrich_indicator"]
+
+
 def test_routed_tool_fn_sends_mcp_tools_to_mcp_and_the_rest_to_sql():
     sql_calls, mcp_calls = [], []
 

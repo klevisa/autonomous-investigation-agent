@@ -105,9 +105,25 @@ def get_case(case_id):
 def investigations_for(case_id):
     return _query("""SELECT investigation_id, status, assessed_severity, escalate_to_high,
                             recommended_play, confidence, summary, rationale, evidence, tools_called,
-                            model_endpoint, started_at, finished_at
+                            model_endpoint, job_run_id, started_at, finished_at
                      FROM investigations WHERE case_id = %s
                      ORDER BY started_at DESC NULLS LAST""", (case_id,))
+
+
+def job_run_url(job_run_id):
+    """The Databricks Jobs UI URL for an investigation's triggering run, or None. Only job/job_warehouse
+    investigations HAVE a run (in_process runs in the app thread and stores no run id), so this returns
+    None for in_process — the UI then simply omits the link. Best-effort: any resolution failure (job not
+    found, Jobs API blip) yields None rather than breaking the page."""
+    if not job_run_id or not IS_JOB:
+        return None
+    try:
+        job_id = _resolve_investigate_job_id()
+        host = _w.config.host.rstrip("/")
+        return f"{host}/jobs/{job_id}/runs/{job_run_id}?o={_w.get_workspace_id()}"
+    except Exception as e:
+        print(f"[ui] could not build job run url for {job_run_id}: {e}")
+        return None
 
 
 def latest_investigation(case_id):

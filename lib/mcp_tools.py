@@ -74,6 +74,12 @@ def make_mcp_tool_fn(clients):
         if name not in clients:
             return [{"error": f"no MCP client configured for tool {name}"}]
         client, mcp_call_name = clients[name]
+        # Plain blocking call — sequential tool use is expected. DatabricksMCPClient.call_tool() uses
+        # asyncio.run() internally, which needs a thread with no already-running event loop. Both call
+        # sites satisfy that WITHOUT any thread juggling here: the app runs each investigation on its own
+        # background thread (app/investigations.py _launch_inprocess — no loop, and off the FastAPI event
+        # loop), and the investigate job applies nest_asyncio at startup (src/investigate.py) so a blocking
+        # call works under the notebook's ambient loop. Keeping this call dead-simple is deliberate.
         result = client.call_tool(mcp_call_name, {UC_FUNCTION_PARAM[name]: value})
         return _RESULT_PARSERS[name](_extract_text(result))
     return tool_fn

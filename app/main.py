@@ -130,6 +130,10 @@ def case_detail(case_id: str):
             return HTMLResponse(ui.page(ui.empty(f"No case {case_id}."), active="board"))
         inv = investigations.latest_investigation(case_id)
         all_invs = investigations.investigations_for(case_id)
+        # Decorate each investigation with its job-run URL (job/job_warehouse only; None in in_process),
+        # so the UI can link straight to the Databricks run without knowing how to build the URL itself.
+        for i in filter(None, [inv, *all_invs]):
+            i["job_run_url"] = investigations.job_run_url(i.get("job_run_id"))
     except Exception as e:
         return HTMLResponse(ui.page(ui.error(e), active="board"))
     return HTMLResponse(ui.page(ui.case_detail(case, inv, all_invs), active="board"))

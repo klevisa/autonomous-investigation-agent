@@ -110,7 +110,14 @@ def ensure_mcp_service(w: WorkspaceClient, catalog: str, schema: str, service_na
                        connection_name: str) -> tuple[str, str]:
     """Create-or-update the MCP Service exposing the custom server's one tool, referencing the
     connection. No confirmed typed SDK method for MCP Services yet — raw REST, mirroring
-    databricks_ops/lakebase.py's precedent for SDK-uncovered UC surfaces."""
+    databricks_ops/lakebase.py's precedent for SDK-uncovered UC surfaces.
+
+    Idempotent via create-then-fallback rather than a GET pre-check: the mcp-services GET-by-name form
+    isn't reliable across versions (verified live — the GET didn't match an existing service), so we
+    POST and, on AlreadyExists, PATCH to keep the config current. The service references the connection
+    by NAME, so rotating the connection's embedded credential (ensure_connection) needs no service
+    change — an existing service keeps working against the updated connection."""
+    from databricks.sdk.errors import AlreadyExists
     parent = f"schemas/{catalog}.{schema}"
     full_name = f"{catalog}.{schema}.{service_name}"
     body = {"comment": "AIA custom MCP server (enrich_indicator)",
@@ -118,13 +125,16 @@ def ensure_mcp_service(w: WorkspaceClient, catalog: str, schema: str, service_na
                        "include_tool_selectors": []}}   # empty selector list = expose every tool the
                                                           # backend advertises (our server has only one)
     try:
-        _do(w, "GET", f"/api/2.1/unity-catalog/mcp-services/{full_name}")
-        _do(w, "PATCH", f"/api/2.1/unity-catalog/mcp-services/{full_name}", body=body)
-        return full_name, "updated"
-    except Exception:
         _do(w, "POST", "/api/2.1/unity-catalog/mcp-services", body=body,
             query={"parent": parent, "mcp_service_id": service_name})
         return full_name, "created"
+    except AlreadyExists:
+        try:
+            _do(w, "PATCH", f"/api/2.1/unity-catalog/mcp-services/{full_name}", body=body)
+            return full_name, "updated"
+        except Exception:
+            # Already present and referencing the (fixed-name) connection — nothing to change.
+            return full_name, "exists"
 
 
 def provision(w: WorkspaceClient, *, agent_mode: str, app_name: str, job_sp_client_id: str,
