@@ -30,10 +30,10 @@ always in charge of state.
 This is a **template** — nothing is hardcoded to a workspace. You supply every value. The bundled demo data is
 for evaluation only; in production it is replaced by AIA's real evidence tables and live Tines cases.
 
-> **This branch (`feature/mcp-three-variations`)** showcases 3 tool-delivery mechanisms over the *same* 5 UC
+> **This branch (`mcp`)** showcases 3 tool-delivery mechanisms over the *same* 5 UC
 > functions — direct SQL, Databricks managed MCP, and a custom MCP server behind a UC Connection — with no
 > new capability and no changed data. See [Three ways to call the same tool](#three-ways-to-call-the-same-tool-this-branchs-mcp-showcase).
-> `main` is unaffected; whether this becomes the default is still an open decision.
+> `main` is unaffected; whether this becomes the default way AIA presents its architecture is still an open decision.
 
 ---
 
@@ -95,7 +95,14 @@ scaffolding, like a separate seeder SP, that real AIA doesn't need). The checkli
 `in_process` mode instead adds the *app* SP to the role + warehouse + credential, but only *after* deploy, since
 the app SP is born then — see the [grants-by-stage summary](#grants-by-stage-summary).)
 
-Everything after this — deploy, Lakebase, table structure, app↔job wiring — is done by you as a **regular
+One more piece of admin work lands **after** deploy, in every mode: the custom MCP server variation
+(`enrich_indicator`) is fronted by a **UC HTTP Connection + MCP Service**, and creating those — plus minting
+the embedded SP's OAuth M2M secret — needs metastore/`servicePrincipal.manager` rights a deployer lacks. It's
+post-deploy because the server is hosted in the app, so its URL only exists once deployed. See
+[Door-key vs. native per-caller](#door-key-vs-native-per-caller-mcp-tool-routing) and the working reference in
+`tests/e2e/admin_postdeploy.py`. (The managed-MCP tool, `pivot_indicator`, needs no setup at all.)
+
+Everything else after this — deploy, Lakebase, table structure, app↔job wiring — is done by you as a **regular
 deployer**, because that's who this ships to.
 
 ### Step 1 — fill in `config.yml`
@@ -364,14 +371,14 @@ compute survived"; reconcile handles "the whole run or the app died."
 
 ### Three ways to call the same tool (this branch's MCP showcase)
 
-`feature/mcp-three-variations` doesn't add a new capability — it changes *how* the agent reaches 2 of its 5
+This branch doesn't add a new capability — it changes *how* the agent reaches 2 of its 5
 existing tools, so the same UC functions and the same evidence are reachable three different ways side by side:
 
 | Tool | Delivery | Hosting | Governed by |
 |---|---|---|---|
 | `blast_radius`, `get_account_risk`, `get_account_actions` | Direct UC SQL (unchanged) | n/a — `make_tool_fn` | AIA-role membership, as today |
 | `pivot_indicator` | **Databricks managed MCP** | Databricks (`/api/2.0/mcp/functions/...`) | The caller's own AIA-role `EXECUTE` grant — enforced natively, no new grant |
-| `enrich_indicator` | **Custom MCP server** (`app/mcp_server.py`) | This app, at `/mcp/` | A **UC HTTP Connection + MCP Service** (`databricks_ops/mcp_connection.py`) |
+| `enrich_indicator` | **Custom MCP server** (`app/mcp_server.py`) | This app, at `/mcp/` | A **UC HTTP Connection + MCP Service** (provisioned by admin — `tests/harness/mcp.py`) |
 
 `lib/mcp_tools.py` is the seam: `make_routed_tool_fn` sends `enrich_indicator`/`pivot_indicator` to a
 `DatabricksMCPClient` and the other 3 to the unchanged SQL path; both MCP tools use the *same* client class,
@@ -421,12 +428,24 @@ trade-off — accepted — is that queries audit to the member SP, not the role.
 | 8 | App SP: RW on `cases`+`investigations`; Job SP: `INSERT`-only on the journal | Lakebase | Deployer (table owner) | owner | setup |
 | 9 | App SP: `CAN_MANAGE_RUN` on the investigate job | job ACL | Deployer (job owner) | owner | setup |
 | 10 | Job SP: `CAN_READ` on the bundle files dir (to read its notebook) | workspace ACL | Deployer (file owner) | owner | setup |
+| 11 | Mint the caller SP's OAuth M2M secret + create the UC HTTP Connection (embeds it, points at the app's `/mcp/`) | connection | Platform admin | admin | post-deploy |
+| 12 | Create the MCP Service referencing the connection | MCP service (in the AIA schema) | **Catalog/schema owner (AIA)** | owner | post-deploy |
+| 13 | Caller SP: `CAN_USE` on the app (past its OAuth edge — the "door key") | app ACL | Platform admin | admin | post-deploy |
+| 14 | Caller SP: `EXECUTE` on the MCP Service | MCP service | **MCP-service owner (AIA)** | owner | post-deploy |
+
+Rows 11–14 exist **only for the custom-MCP-server variation** (`enrich_indicator`); the managed-MCP tool
+(`pivot_indicator`) and the SQL tools add nothing. In `job_warehouse`/`job` the *caller SP* in rows 11/13/14
+is the **job SP**; in `in_process` it's the **app SP**. They're post-deploy in every mode because the server
+is app-hosted (its URL only exists after deploy), and they're **admin/owner** work, not deployer's — creating a
+connection is metastore-level, minting the SP secret needs `servicePrincipal.manager`, and the MCP service is
+created in the AIA-owned schema.
 
 The clean split: **admin** does the account-level identity work (create the role, group membership, rule-sets,
-warehouse grant); the **catalog/schema owner** (AIA) grants the role its data access; and the **deployer**
-does everything that only touches resources it created or owns (Lakebase tables, the job's ACL, the bundle
-files) — no admin required. Grants 8–10 are additive and survive redeploys; never express them as a bundle
-`permissions` block (that block is authoritative and resets ACLs on every deploy).
+warehouse grant, and the custom-MCP connection/service — rows 11–14); the **catalog/schema owner** (AIA) grants
+the role its data access; and the **deployer** does everything that only touches resources it created or owns
+(Lakebase tables, the job's ACL, the bundle files — rows 8–10) — no admin required. Grants 8–10 are additive
+and survive redeploys; never express them as a bundle `permissions` block (that block is authoritative and
+resets ACLs on every deploy).
 
 ### No stored secrets
 
@@ -435,13 +454,23 @@ files) — no admin required. Grants 8–10 are additive and survive redeploys; 
 | App SP OAuth id/secret | injected by the Databricks Apps runtime | No |
 | Lakebase access | OAuth token minted **per connection** (~1h) for the holder | No |
 | Job identity | `run_as` + platform-injected `{{job.run_id}}` | No — none at all |
-| **LLM gateway token** | **AWS Secrets Manager**, read via a UC **service credential** (fresh STS per call) | **The only one** — and never in Databricks |
+| **LLM gateway token** | **AWS Secrets Manager**, read via a UC **service credential** (fresh STS per call) | The only one on the base architecture — and never in Databricks |
+| **Custom-MCP connection credential** *(that variation only)* | the caller SP's OAuth M2M `client_secret`, embedded in the UC HTTP Connection | Yes — **inside** Databricks (the connection securable), governed by UC connection ACLs |
 
 The LLM surface: only the **token** is secret. The gateway URL and the credential/ARN names are plain config
 vars (`llm_endpoint_url`, `llm_service_credential`, `llm_secret_arn`, …). At runtime `lib/llm.py` exchanges the
 service credential for short-lived AWS STS creds and calls `GetSecretValue` — so the tool-runner needs exactly
 `ACCESS` on the service credential, nothing more. (For a laptop run, set `llm_endpoint_url` + `AIA_LLM_TOKEN`
 and it skips AWS entirely.)
+
+The one honest exception is the **custom MCP server** variation. Reaching an autonomous external MCP server
+requires *some* long-lived credential — and a UC HTTP Connection can't source it from AWS Secrets Manager the
+way the LLM token does (a connection's only credential indirection is a Databricks secret-scope `secret()`
+reference; there's no service-credential/AWS path). We deliberately keep the OAuth M2M `client_secret` **inline
+in the connection object** — which is how connections carry credentials, and the point of the showcase — so it
+lives inside Databricks, protected by UC connection ACLs rather than the AWS path. The short-lived bearer tokens
+UC mints from it per call are ephemeral (the same "minted, not stored" category as Lakebase's tokens). The
+managed-MCP tool adds no credential at all.
 
 ### How the app SP reaches its Lakebase tables
 
@@ -463,11 +492,12 @@ into the role:
 | **Pre-deploy** | Platform admin + catalog/schema owner | create the AIA role + grant it the evidence `SELECT`/`EXECUTE`; **[job modes]** create the job SP, add it to the role, warehouse `CAN_USE`, LLM-credential `ACCESS`, and `servicePrincipal.user` to the deployer; put the LLM token in AWS + create the service credential |
 | **Deploy** | Deployer / CI SP | `bundle deploy` — the job + the app (the app SP is born here) |
 | **Setup** | Deployer (as owner) | Lakebase grants (app SP RW, job SP journal `INSERT`); app SP `CAN_MANAGE_RUN` on the job; job SP `CAN_READ` on the files |
-| **Post-deploy** | Platform admin | **[`in_process` only]** add the *app* SP to the role + warehouse `CAN_USE` + LLM-credential `ACCESS` (deferred to here because the app SP doesn't exist until deploy) |
+| **Post-deploy** | Platform admin (+ AIA as MCP-service owner) | **[`in_process` only]** add the *app* SP to the role + warehouse `CAN_USE` + LLM-credential `ACCESS` (deferred to here because the app SP doesn't exist until deploy). **[custom-MCP variation, all modes]** create the UC HTTP Connection + MCP Service and grant the caller SP `CAN_USE` (app) + `EXECUTE` (service) — post-deploy because the server is app-hosted |
 
-So `job_warehouse`/`job` do all their identity grants **pre-deploy** (the job SP exists ahead of time), while
-`in_process` shifts the tool-runner grants to **post-deploy** (the app SP is born at deploy). Everything else is
-identical.
+So `job_warehouse`/`job` do all their *base* identity grants **pre-deploy** (the job SP exists ahead of time),
+while `in_process` shifts the tool-runner grants to **post-deploy** (the app SP is born at deploy). The
+custom-MCP connection/service is post-deploy in **every** mode (the server is app-hosted, so its URL isn't known
+until deploy). Everything else is identical.
 
 ### Door-key vs. native per-caller (MCP tool routing)
 
@@ -485,10 +515,15 @@ different governance stories, and the difference is structural, not a choice:
   reach the endpoint at all* — but once a request is let in, `app/mcp_server.py` runs the UC function as the
   **app's own ambient SP**, exactly like every other line of this app.
 
-The connection's embedded SP is **re-provisioned per deploy** from the same `agent_mode` this app already
-reads elsewhere: the **app SP** when `agent_mode=in_process`, the **job SP** otherwise — whichever identity is
-actually the one calling at investigation time in that deployed stack (`databricks_ops/mcp_connection.py`).
-Two grants follow from this, wired by `scripts/setup.py`'s post-deploy step:
+The connection's embedded SP is chosen from the same `agent_mode` this app already reads elsewhere: the
+**app SP** when `agent_mode=in_process`, the **job SP** otherwise — whichever identity is actually the one
+calling at investigation time in that deployed stack. Provisioning it is **admin/owner** work, done
+**post-deploy in every mode** (the custom server is app-hosted, so the connection's URL — and, in
+`in_process`, the app SP itself — only exist after deploy): the admin creates the connection + MCP Service and
+mints the embedded SP's OAuth M2M secret. It's the same [post-deploy admin stage](#grants-by-stage-summary)
+that already adds the app SP to the role for `in_process`. The scripted reference is
+`tests/e2e/admin_postdeploy.py` → `tests/harness/mcp.py`. Two grants follow (rows 13–14 of the
+[grants table](#who-grants-what-and-when-job_warehouse)):
 
 | Grant | On | Why |
 |---|---|---|
@@ -554,11 +589,11 @@ src/
   investigate.py          the job driver (job modes): tools on Spark or the warehouse → journal
 scripts/                  readable deploy/setup recipes over the databricks_ops SDK helpers
   deploy.py               bundle deploy + start the app (CI does this in prod)
-  setup.py                Lakebase + build_structure + app↔job wiring + MCP connection/service (once per env)
+  setup.py                Lakebase + build_structure + app↔job wiring (deployer-owned; once per env)
   setup_cicd.py           push CI credentials + PROD_* values to GitHub
 databricks_ops/           the SDK-typed functions the scripts call (Lakebase, groups, grants, config)
-  mcp_connection.py       provisions the UC HTTP Connection + MCP Service fronting app/mcp_server.py
 demo/                     the SEPARATE, evaluation-only demo bundle (substrate + tools + 25 cases)
 .github/workflows/        CI/CD — code deploy on merge, Lakebase setup via workflow_dispatch
 tests/                    unit + integration tests and the end-to-end harness (an executable reference)
+  harness/mcp.py          admin reference: provisions the UC HTTP Connection + MCP Service (custom-MCP variation)
 ```
