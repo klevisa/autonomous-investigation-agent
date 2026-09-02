@@ -27,6 +27,7 @@ from tests.e2e import (
     grant_seeder_lakebase,
     seed as seed_phase,
     admin_postdeploy,
+    showcase_external_mcp,
 )
 
 MODES = ("in_process", "job", "job_warehouse")
@@ -74,6 +75,7 @@ def phases_for(mode: str, strategy: str, remote: str):
         ("grant_seeder_lakebase (deployer grants the seeder)", grant_seeder_lakebase.main),
         ("seed (seeder deploys + runs the demo/ bundle)", seed_phase.main, mode),
         ("admin_postdeploy (app SP → role membership + warehouse)", admin_postdeploy.main, mode),
+        ("showcase_external_mcp (UC connection + MCP service — teaching layer)", showcase_external_mcp.main, mode),
     ]
     return p
 

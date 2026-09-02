@@ -1,39 +1,44 @@
 #!/usr/bin/env python3
-"""ADMIN post-deploy work (as ADMIN_PROFILE). These need the app SP (born at deploy) and/or account-host
-+ metastore rights a regular deployer lacks, so the admin does them once, after deploy.
+"""ADMIN post-deploy grants (as ADMIN_PROFILE). These need the app SP (born at deploy) and account-host
+rights a regular deployer lacks, so the admin does them once, after deploy.
 
     python3 -m tests.e2e.admin_postdeploy <in_process|job|job_warehouse>
 
-Two parts:
+  in_process → the app SP is the tool-runner, so: (1) make it a MEMBER of the AIA role (it inherits the
+               evidence SELECT / tool EXECUTE grants by membership — no role assumption, no minted token),
+               (2) grant it warehouse CAN_USE DIRECTLY (it hits the warehouse as itself), and (3) grant it
+               ACCESS on the LLM UC service credential (it mints the gateway token at runtime).
+  job / job_warehouse → nothing here. The job SP is the tool-runner and is known pre-deploy, so admin_prereqs
+               already granted it role MEMBERSHIP + LLM-credential ACCESS (+ warehouse CAN_USE for
+               job_warehouse); nothing needs the app.
 
-  1) Tool-access grants for the IN_PROCESS runner (in_process only): (a) make the app SP a MEMBER of the
-     AIA role (it inherits the evidence SELECT / tool EXECUTE grants by membership — no role assumption,
-     no minted token), (b) grant it warehouse CAN_USE DIRECTLY (it hits the warehouse as itself), and
-     (c) grant it ACCESS on the LLM UC service credential (it mints the gateway token at runtime).
-     job / job_warehouse need none of this — the job SP is the tool-runner, known pre-deploy, so
-     admin_prereqs already granted it role MEMBERSHIP + LLM-credential ACCESS (+ warehouse CAN_USE for
-     job_warehouse).
-
-  2) Provision the custom-MCP-server variation (enrich_indicator) — ALL modes. Create the UC HTTP
-     Connection + MCP Service and grant the caller SP CAN_USE (app) + EXECUTE (service). This is admin/
-     owner work (CREATE CONNECTION is metastore-level; minting the SP's embedded OAuth M2M secret needs
-     servicePrincipal.manager; the service is created in the AIA-owned schema), and it runs POST-deploy in
-     every mode because the custom MCP server is hosted in the app, so its URL only exists after deploy.
-     The embedded/granted SP is the app SP (in_process) or the job SP (job modes) — see tests/harness/mcp.py.
+(The external-MCP connection/service showcase is a SEPARATE later phase — tests/e2e/showcase_external_mcp.py —
+not core post-deploy grants, so it lives on its own.)
 """
 import json
 import sys
 
-from tests.harness import config, dbx, identities, mcp, report
+from tests.harness import config, dbx, identities, report
 # reuse the PRODUCT's SCIM-propagation gate + group-id resolver — do not re-implement
 from databricks_ops import groups
 
 
-def _grant_inprocess_tool_access(cfg, w, admin: str, app_name: str, role: str) -> None:
-    """in_process only: the app SP is the tool-runner, so it needs role membership + warehouse + LLM ACCESS."""
+def main(mode: str) -> None:
+    cfg = config.load()
+    admin = cfg.require("ADMIN_PROFILE")
+    app_name = cfg.require("APP_NAME")
+    role = cfg.require("ROLE_GROUP")
+
+    if mode in ("job", "job_warehouse"):
+        print(f"{mode}: tool access via role MEMBERSHIP + credential ACCESS (+ warehouse for job_warehouse) "
+              f"granted in admin_prereqs — nothing to do.")
+        print(f"\nADMIN post-deploy grants done (mode={mode}). Next: USER runs 03_setup.py")
+        return
+
     app_sp = dbx.app_sp(admin, app_name)
     if not app_sp:
         sys.exit("could not resolve the app SP — run 01_deploy.py first")
+    w = dbx.client(admin)
 
     # 1) app SP → MEMBER of the AIA role. The app runs UC-function tools with its OWN ambient identity
     #    (WorkspaceClient()), so it needs the role's evidence SELECT / tool EXECUTE grants by MEMBERSHIP —
@@ -63,38 +68,7 @@ def _grant_inprocess_tool_access(cfg, w, admin: str, app_name: str, role: str) -
     else:
         print("  (AIA_LLM_SERVICE_CREDENTIAL unset — skipping; set it in config.env)")
 
-
-def _provision_custom_mcp(cfg, w, mode: str, app_name: str) -> None:
-    """ALL modes: the custom MCP server (enrich_indicator) is app-hosted, so provision its UC HTTP
-    Connection + MCP Service now (post-deploy — the app URL only exists after deploy). mcp.provision resolves
-    the caller SP from the mode (app SP for in_process, job SP otherwise), embeds a fresh OAuth M2M secret,
-    and grants that SP CAN_USE on the app + EXECUTE on the service."""
-    catalog, schema = cfg.require("CATALOG"), cfg.require("SCHEMA")
-    job_sp = (cfg.get("JOB_SP") or "").strip()
-    app_url = w.apps.get(name=app_name).url
-    custom_mcp_app_url = f"{app_url.rstrip('/')}/mcp/"   # trailing slash: avoids the app's Mount 307-redirect
-    report.step(f"provision the custom-MCP UC HTTP Connection + MCP Service (enrich_indicator, {mode})")
-    result = mcp.provision(w, agent_mode=mode, app_name=app_name, job_sp_client_id=job_sp,
-                           catalog=catalog, schema=schema, custom_mcp_app_url=custom_mcp_app_url)
-    print(f"  {result}")
-
-
-def main(mode: str) -> None:
-    cfg = config.load()
-    admin = cfg.require("ADMIN_PROFILE")
-    app_name = cfg.require("APP_NAME")
-    role = cfg.require("ROLE_GROUP")
-    w = dbx.client(admin)
-
-    if mode == "in_process":
-        _grant_inprocess_tool_access(cfg, w, admin, app_name, role)
-    else:
-        print(f"{mode}: tool access via role MEMBERSHIP + credential ACCESS (+ warehouse for job_warehouse) "
-              f"granted in admin_prereqs — nothing mode-specific here.")
-
-    _provision_custom_mcp(cfg, w, mode, app_name)
-
-    print(f"\nADMIN post-deploy done (mode={mode}). Next: USER runs 03_setup.py")
+    print(f"\nADMIN post-deploy grants done (mode={mode}). Next: USER runs 03_setup.py")
 
 
 if __name__ == "__main__":

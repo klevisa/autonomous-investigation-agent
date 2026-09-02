@@ -95,12 +95,13 @@ scaffolding, like a separate seeder SP, that real AIA doesn't need). The checkli
 `in_process` mode instead adds the *app* SP to the role + warehouse + credential, but only *after* deploy, since
 the app SP is born then — see the [grants-by-stage summary](#grants-by-stage-summary).)
 
-One more piece of admin work lands **after** deploy, in every mode: the custom MCP server variation
-(`enrich_indicator`) is fronted by a **UC HTTP Connection + MCP Service**, and creating those — plus minting
-the embedded SP's OAuth M2M secret — needs metastore/`servicePrincipal.manager` rights a deployer lacks. It's
-post-deploy because the server is hosted in the app, so its URL only exists once deployed. See
+Separately, an optional **teaching layer** runs after deploy: the external-MCP showcase fronts
+`enrich_indicator` with a **UC HTTP Connection + MCP Service** to demonstrate the governed path to a *real
+external* MCP server. Creating those — plus the dedicated external-MCP client SP and its secret — is admin
+work (metastore-level `CREATE CONNECTION`, a schema-owned service). It's **not** part of core AIA: natively
+you'd reach this app-hosted server by calling `/mcp/` directly under `CAN_USE`. See
 [Door-key vs. native per-caller](#door-key-vs-native-per-caller-mcp-tool-routing) and the working reference in
-`tests/e2e/admin_postdeploy.py`. (The managed-MCP tool, `pivot_indicator`, needs no setup at all.)
+`tests/e2e/showcase_external_mcp.py`. (The managed-MCP tool, `pivot_indicator`, needs no setup at all.)
 
 Everything else after this — deploy, Lakebase, table structure, app↔job wiring — is done by you as a **regular
 deployer**, because that's who this ships to.
@@ -378,7 +379,7 @@ existing tools, so the same UC functions and the same evidence are reachable thr
 |---|---|---|---|
 | `blast_radius`, `get_account_risk`, `get_account_actions` | Direct UC SQL (unchanged) | n/a — `make_tool_fn` | AIA-role membership, as today |
 | `pivot_indicator` | **Databricks managed MCP** | Databricks (`/api/2.0/mcp/functions/...`) | The caller's own AIA-role `EXECUTE` grant — enforced natively, no new grant |
-| `enrich_indicator` | **Custom MCP server** (`app/mcp_server.py`) | This app, at `/mcp/` | A **UC HTTP Connection + MCP Service** (provisioned by admin — `tests/harness/mcp.py`) |
+| `enrich_indicator` | **Custom MCP server** (`app/mcp_server.py`) | This app, at `/mcp/` (a stand-in for an *external* server) | A **UC HTTP Connection + MCP Service** — the external-MCP showcase (see below); natively you'd just use `CAN_USE` on the app |
 
 `lib/mcp_tools.py` is the seam: `make_routed_tool_fn` sends `enrich_indicator`/`pivot_indicator` to a
 `DatabricksMCPClient` and the other 3 to the unchanged SQL path; both MCP tools use the *same* client class,
@@ -386,8 +387,18 @@ differing only in `server_url`. Wired into both call sites exactly where the SQL
 built (`app/investigations.py::_make_investigation_deps`, `src/investigate.py`) — nothing about `Investigator`
 or the tool specs the LLM sees changes.
 
-Why `pivot_indicator` and `enrich_indicator` are treated differently despite being "the same kind of tool" is
-the subject of the next section.
+**`enrich_indicator` is a teaching device — read this before the governance section.** Hosting the MCP
+server *inside the app* is a demo convenience: it saves standing up a separate server. It is **not** how
+you'd reach *this* server in production. Because it lives in the app, a Databricks-native caller would hit
+`/mcp/` **directly**, governed by **`CAN_USE` on the app** — no connection, no MCP service, no embedded
+credential. We deliberately front it with a **UC HTTP Connection + MCP Service** anyway to demonstrate the
+first-class, governed path you'd use for a *genuinely external* MCP server (register the endpoint as a
+connection, expose it as an MCP service, grant `EXECUTE`). That whole layer — and the grants it needs — exists
+only for the showcase; it's provisioned by a **separate, clearly-labelled step** (`tests/harness/mcp.py`,
+driven by `tests/e2e/showcase_external_mcp.py`), never by AIA's core bring-up.
+
+Why `pivot_indicator` (managed MCP, native per-caller) and `enrich_indicator` (the external-MCP showcase)
+have different governance stories is the subject of the next section.
 
 ---
 
@@ -428,22 +439,26 @@ trade-off — accepted — is that queries audit to the member SP, not the role.
 | 8 | App SP: RW on `cases`+`investigations`; Job SP: `INSERT`-only on the journal | Lakebase | Deployer (table owner) | owner | setup |
 | 9 | App SP: `CAN_MANAGE_RUN` on the investigate job | job ACL | Deployer (job owner) | owner | setup |
 | 10 | Job SP: `CAN_READ` on the bundle files dir (to read its notebook) | workspace ACL | Deployer (file owner) | owner | setup |
-| 11 | Mint the caller SP's OAuth M2M secret + create the UC HTTP Connection (embeds it, points at the app's `/mcp/`) | connection | Platform admin | admin | post-deploy |
+| 11 | Create the **external-MCP client SP** + mint its OAuth M2M secret + create the UC HTTP Connection (embeds it, points at the app's `/mcp/`) | connection + a dedicated SP | Platform admin | admin | post-deploy |
 | 12 | Create the MCP Service referencing the connection | MCP service (in the AIA schema) | **Catalog/schema owner (AIA)** | owner | post-deploy |
-| 13 | Caller SP: `CAN_USE` on the app (past its OAuth edge — the "door key") | app ACL | Platform admin | admin | post-deploy |
-| 14 | Caller SP: `EXECUTE` on the MCP Service | MCP service | **MCP-service owner (AIA)** | owner | post-deploy |
+| 13 | External-MCP client SP: `CAN_USE` on the app (the connection authenticates as it — the "door key") | app ACL | Platform admin | admin | post-deploy |
+| 14 | Agent caller (app/job SP): `EXECUTE` on the MCP Service | MCP service | **MCP-service owner (AIA)** | owner | post-deploy |
 
-Rows 11–14 exist **only for the custom-MCP-server variation** (`enrich_indicator`); the managed-MCP tool
-(`pivot_indicator`) and the SQL tools add nothing. In `job_warehouse`/`job` the *caller SP* in rows 11/13/14
-is the **job SP**; in `in_process` it's the **app SP**. They're post-deploy in every mode because the server
-is app-hosted (its URL only exists after deploy), and they're **admin/owner** work, not deployer's — creating a
-connection is metastore-level, minting the SP secret needs `servicePrincipal.manager`, and the MCP service is
-created in the AIA-owned schema.
+Rows 11–14 are the **external-MCP showcase** (`enrich_indicator`) — a teaching layer, not core AIA (the
+managed-MCP tool `pivot_indicator` and the SQL tools add nothing). They use **two** identities, deliberately
+separated: the embedded credential + app `CAN_USE` (rows 11, 13) belong to a **dedicated external-MCP client
+SP** the admin creates (so the admin can mint its secret — it's the client identity the connection presents
+to the stand-in external server, *not* AIA's runtime identity); the service `EXECUTE` (row 14) goes to the
+**agent caller** — the app SP for `in_process`, the job SP otherwise — since that's who invokes the service at
+investigation time. All post-deploy (the server is app-hosted, so its URL only exists after deploy) and all
+**admin/owner** work — creating a connection is metastore-level, and the MCP service is created in the
+AIA-owned schema. Because the door-key credential lives on a dedicated admin-owned SP, none of this touches the
+app SP's secrets (which only the app owner can mint) — it's uniform across modes.
 
 The clean split: **admin** does the account-level identity work (create the role, group membership, rule-sets,
-warehouse grant, and the custom-MCP connection/service — rows 11–14); the **catalog/schema owner** (AIA) grants
-the role its data access; and the **deployer** does everything that only touches resources it created or owns
-(Lakebase tables, the job's ACL, the bundle files — rows 8–10) — no admin required. Grants 8–10 are additive
+warehouse grant, and the external-MCP showcase connection/service — rows 11–14); the **catalog/schema owner**
+(AIA) grants the role its data access; and the **deployer** does everything that only touches resources it
+created or owns (Lakebase tables, the job's ACL, the bundle files — rows 8–10) — no admin required. Grants 8–10 are additive
 and survive redeploys; never express them as a bundle `permissions` block (that block is authoritative and
 resets ACLs on every deploy).
 
@@ -455,7 +470,7 @@ resets ACLs on every deploy).
 | Lakebase access | OAuth token minted **per connection** (~1h) for the holder | No |
 | Job identity | `run_as` + platform-injected `{{job.run_id}}` | No — none at all |
 | **LLM gateway token** | **AWS Secrets Manager**, read via a UC **service credential** (fresh STS per call) | The only one on the base architecture — and never in Databricks |
-| **Custom-MCP connection credential** *(that variation only)* | the caller SP's OAuth M2M `client_secret`, embedded in the UC HTTP Connection | Yes — **inside** Databricks (the connection securable), governed by UC connection ACLs |
+| **External-MCP connection credential** *(showcase layer only)* | the **external-MCP client SP**'s OAuth M2M `client_secret`, embedded in the UC HTTP Connection | Yes — **inside** Databricks (the connection securable), governed by UC connection ACLs |
 
 The LLM surface: only the **token** is secret. The gateway URL and the credential/ARN names are plain config
 vars (`llm_endpoint_url`, `llm_service_credential`, `llm_secret_arn`, …). At runtime `lib/llm.py` exchanges the
@@ -463,14 +478,17 @@ service credential for short-lived AWS STS creds and calls `GetSecretValue` — 
 `ACCESS` on the service credential, nothing more. (For a laptop run, set `llm_endpoint_url` + `AIA_LLM_TOKEN`
 and it skips AWS entirely.)
 
-The one honest exception is the **custom MCP server** variation. Reaching an autonomous external MCP server
-requires *some* long-lived credential — and a UC HTTP Connection can't source it from AWS Secrets Manager the
-way the LLM token does (a connection's only credential indirection is a Databricks secret-scope `secret()`
-reference; there's no service-credential/AWS path). We deliberately keep the OAuth M2M `client_secret` **inline
-in the connection object** — which is how connections carry credentials, and the point of the showcase — so it
-lives inside Databricks, protected by UC connection ACLs rather than the AWS path. The short-lived bearer tokens
-UC mints from it per call are ephemeral (the same "minted, not stored" category as Lakebase's tokens). The
-managed-MCP tool adds no credential at all.
+The one honest exception is the **external-MCP showcase**. Reaching an autonomous external MCP server requires
+*some* long-lived credential — and a UC HTTP Connection can't source it from AWS Secrets Manager the way the LLM
+token does (a connection's only credential indirection is a Databricks secret-scope `secret()` reference; there's
+no service-credential/AWS path). We deliberately keep the OAuth M2M `client_secret` **inline in the connection
+object** — which is how connections carry credentials, and the point of the showcase — so it lives inside
+Databricks, protected by UC connection ACLs. It belongs to a **dedicated external-MCP client SP**, not to AIA's
+app/job identity, so it's cleanly separable and revocable. The short-lived bearer tokens UC mints from it per
+call are ephemeral (the same "minted, not stored" category as Lakebase's tokens). Note this credential only
+exists *because* we route through the connection to demo the external path: the native way to reach this
+app-hosted server needs no stored credential at all — just `CAN_USE` on the app. The managed-MCP tool
+(`pivot_indicator`) adds nothing either.
 
 ### How the app SP reaches its Lakebase tables
 
@@ -492,12 +510,12 @@ into the role:
 | **Pre-deploy** | Platform admin + catalog/schema owner | create the AIA role + grant it the evidence `SELECT`/`EXECUTE`; **[job modes]** create the job SP, add it to the role, warehouse `CAN_USE`, LLM-credential `ACCESS`, and `servicePrincipal.user` to the deployer; put the LLM token in AWS + create the service credential |
 | **Deploy** | Deployer / CI SP | `bundle deploy` — the job + the app (the app SP is born here) |
 | **Setup** | Deployer (as owner) | Lakebase grants (app SP RW, job SP journal `INSERT`); app SP `CAN_MANAGE_RUN` on the job; job SP `CAN_READ` on the files |
-| **Post-deploy** | Platform admin (+ AIA as MCP-service owner) | **[`in_process` only]** add the *app* SP to the role + warehouse `CAN_USE` + LLM-credential `ACCESS` (deferred to here because the app SP doesn't exist until deploy). **[custom-MCP variation, all modes]** create the UC HTTP Connection + MCP Service and grant the caller SP `CAN_USE` (app) + `EXECUTE` (service) — post-deploy because the server is app-hosted |
+| **Post-deploy** | Platform admin (+ AIA as MCP-service owner) | **[`in_process` only]** add the *app* SP to the role + warehouse `CAN_USE` + LLM-credential `ACCESS` (deferred to here because the app SP doesn't exist until deploy). **[external-MCP showcase, all modes]** create the external-MCP client SP + UC HTTP Connection + MCP Service; grant the client SP `CAN_USE` (app) and the agent caller `EXECUTE` (service) — a separate teaching layer, post-deploy because the server is app-hosted |
 
 So `job_warehouse`/`job` do all their *base* identity grants **pre-deploy** (the job SP exists ahead of time),
 while `in_process` shifts the tool-runner grants to **post-deploy** (the app SP is born at deploy). The
-custom-MCP connection/service is post-deploy in **every** mode (the server is app-hosted, so its URL isn't known
-until deploy). Everything else is identical.
+external-MCP showcase is a separate post-deploy layer in **every** mode (the server is app-hosted, so its URL
+isn't known until deploy). Everything else is identical.
 
 ### Door-key vs. native per-caller (MCP tool routing)
 
@@ -507,31 +525,34 @@ different governance stories, and the difference is structural, not a choice:
 - **`pivot_indicator` (managed MCP)** has no proxy in the middle — the caller's own ambient identity (job SP or
   app SP) hits Databricks' managed endpoint directly, so its *existing* AIA-role `EXECUTE` grant is enforced
   natively, per call. **Zero new grants.** This is true per-caller enforcement, for free.
-- **`enrich_indicator` (custom MCP)** goes through a UC HTTP Connection, and that connection's proxy
-  **strips the caller's own Databricks credential** before it reaches our app — Databricks Apps has no
+- **`enrich_indicator` (external-MCP showcase)** goes through a UC HTTP Connection, and that connection's
+  proxy **strips the caller's own Databricks credential** before it reaches our app — Databricks Apps has no
   mechanism to forward an M2M caller's identity into app code (`x-forwarded-access-token` is OBO/human-only,
   confirmed empirically: it's never populated for a service-principal caller). So the connection's embedded
   OAuth M2M credential is a **door key, not a per-caller identity**: it's a real, UC-enforced gate on *who may
   reach the endpoint at all* — but once a request is let in, `app/mcp_server.py` runs the UC function as the
   **app's own ambient SP**, exactly like every other line of this app.
 
-The connection's embedded SP is chosen from the same `agent_mode` this app already reads elsewhere: the
-**app SP** when `agent_mode=in_process`, the **job SP** otherwise — whichever identity is actually the one
-calling at investigation time in that deployed stack. Provisioning it is **admin/owner** work, done
-**post-deploy in every mode** (the custom server is app-hosted, so the connection's URL — and, in
-`in_process`, the app SP itself — only exist after deploy): the admin creates the connection + MCP Service and
-mints the embedded SP's OAuth M2M secret. It's the same [post-deploy admin stage](#grants-by-stage-summary)
-that already adds the app SP to the role for `in_process`. The scripted reference is
-`tests/e2e/admin_postdeploy.py` → `tests/harness/mcp.py`. Two grants follow (rows 13–14 of the
+Because the door key doesn't carry the caller's identity, it needn't *be* an AIA identity at all — so we give
+it a **dedicated `aia-external-mcp-client` SP**, created by the admin (which is why the admin can mint its
+secret, unlike the app SP). That's what a real external MCP integration looks like: the connection presents a
+client credential belonging to the integration, not to your app. Two grants follow (rows 13–14 of the
 [grants table](#who-grants-what-and-when-job_warehouse)):
 
-| Grant | On | Why |
-|---|---|---|
-| `CAN_USE` | the app | Lets the connection's embedded SP's OAuth M2M credential past the app's own OAuth edge — the door key. |
-| `EXECUTE` | the MCP Service | Lets that SP actually invoke the `enrich_indicator` tool through the service. |
+| Grant | Principal | On | Why |
+|---|---|---|---|
+| `CAN_USE` | external-MCP client SP | the app | Lets the connection's embedded credential past the app's own OAuth edge — the door key. |
+| `EXECUTE` | agent caller (app/job SP) | the MCP Service | Lets AIA's investigation-time identity actually invoke `enrich_indicator` through the service. |
 
 **Never** grant `USE CONNECTION` instead of `EXECUTE` on the service — that would let the grantee call the raw
 backend directly, bypassing tool selection entirely.
+
+**This whole layer is a teaching device.** The `enrich_indicator` server is hosted *in the app* only so the
+demo needn't stand up an external one; natively you'd reach it by calling `/mcp/` **directly** under `CAN_USE`
+on the app — no connection, no client SP, no MCP service. We route through the connection to show the governed
+path for a *real external* MCP server. It's provisioned by its own step (`tests/e2e/showcase_external_mcp.py` →
+`tests/harness/mcp.py`), separate from AIA's core bring-up, and is the only place a long-lived credential is
+persisted inside Databricks.
 
 ---
 
@@ -595,5 +616,5 @@ databricks_ops/           the SDK-typed functions the scripts call (Lakebase, gr
 demo/                     the SEPARATE, evaluation-only demo bundle (substrate + tools + 25 cases)
 .github/workflows/        CI/CD — code deploy on merge, Lakebase setup via workflow_dispatch
 tests/                    unit + integration tests and the end-to-end harness (an executable reference)
-  harness/mcp.py          admin reference: provisions the UC HTTP Connection + MCP Service (custom-MCP variation)
+  harness/mcp.py          external-MCP showcase: provisions the UC HTTP Connection + MCP Service (teaching layer)
 ```
