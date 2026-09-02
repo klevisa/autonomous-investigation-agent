@@ -8,8 +8,59 @@ tests touch (the store, jobs API, journal) is then monkeypatched per test — no
 """
 import importlib
 import sys
+import types
+from contextlib import asynccontextmanager
 
 import pytest
+
+# ── Fake the `mcp` FastMCP SDK (Tier-1: external SDKs are faked, not installed — see tests/requirements.txt,
+#    which carries only pytest/fastapi/httpx/pyyaml). app/mcp_server.py imports FastMCP +
+#    TransportSecuritySettings at MODULE scope, and app/main.py mounts the server (streamable_http_app) and
+#    enters its session manager in the app lifespan; this stub supports exactly that surface and nothing more.
+#    (databricks-mcp and unitycatalog-ai are imported lazily inside functions, so they don't need faking to
+#    import the modules — the tests that exercise them stub at the call site.)
+if "mcp.server.fastmcp" not in sys.modules:
+    _mcp = types.ModuleType("mcp")
+    _mcp_server_mod = types.ModuleType("mcp.server")
+    _fastmcp_mod = types.ModuleType("mcp.server.fastmcp")
+    _transport_mod = types.ModuleType("mcp.server.transport_security")
+
+    class _FakeSessionManager:
+        def run(self):
+            @asynccontextmanager
+            async def _cm():
+                yield
+            return _cm()
+
+    class _FakeFastMCP:
+        def __init__(self, *a, **k):
+            self.session_manager = _FakeSessionManager()
+
+        def tool(self, *a, **k):
+            def _decorator(fn):
+                return fn
+            return _decorator
+
+        def streamable_http_app(self):
+            async def _asgi(scope, receive, send):  # minimal ASGI app; unit tests never route to /mcp/
+                raise AssertionError("the faked MCP sub-app should not be invoked in unit tests")
+            return _asgi
+
+    class _FakeTransportSecuritySettings:
+        def __init__(self, *a, **k):
+            pass
+
+    _fastmcp_mod.FastMCP = _FakeFastMCP
+    _transport_mod.TransportSecuritySettings = _FakeTransportSecuritySettings
+    _mcp.server = _mcp_server_mod
+    _mcp_server_mod.fastmcp = _fastmcp_mod
+    _mcp_server_mod.transport_security = _transport_mod
+    sys.modules.update({
+        "mcp": _mcp,
+        "mcp.server": _mcp_server_mod,
+        "mcp.server.fastmcp": _fastmcp_mod,
+        "mcp.server.transport_security": _transport_mod,
+    })
 
 # Minimal env that satisfies Config.from_env's required keys (+ dummy Databricks auth so a real
 # WorkspaceClient construction, if ever unpatched, wouldn't reach for ambient credentials).
