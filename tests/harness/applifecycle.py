@@ -57,11 +57,15 @@ def make_restart(cfg):
 
     if cfg.deploy_strategy == "cicd":
         repo = cfg.require("GH_REPO")
+        # DEPLOY_REF lets the cicd suite dispatch deploy.yml against a FEATURE BRANCH (e.g. mcp) instead of
+        # main, so a branch can be validated through the real CI path without merging first. deploy.yml is
+        # dispatchable off any ref because it also exists on main (the default branch). Defaults to main.
+        ref = cfg.get("DEPLOY_REF") or "main"
 
         def _do() -> None:
-            report.step(f"restart {app_name} via a REAL CI redeploy (workflow_dispatch, targets=code)")
+            report.step(f"restart {app_name} via a REAL CI redeploy (workflow_dispatch, targets=code, ref={ref})")
             prev = gh.latest_run_id(repo)                # capture BEFORE dispatch so we watch OUR run
-            gh.dispatch(repo, "deploy.yml", ref="main", inputs={"targets": "code"})
+            gh.dispatch(repo, "deploy.yml", ref=ref, inputs={"targets": "code"})
             rid = gh.wait_new_run_id(repo, prev)
             if rid:
                 gh.watch(repo, rid)
