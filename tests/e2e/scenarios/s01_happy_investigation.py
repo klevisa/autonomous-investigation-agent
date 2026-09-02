@@ -52,6 +52,22 @@ def main(mode: str, restart) -> None:
     r.check("at least one tool was called (member-SP warehouse query succeeded)", (n or 0) >= 1)
     print("  (model_endpoint tags the runner: aia-app-in-process | aia-investigate-job)")
 
+    # MCP transports end-to-end: of the 5 tools, enrich_indicator is delivered by the CUSTOM MCP server
+    # (UC HTTP Connection + MCP Service) and pivot_indicator by DATABRICKS MANAGED MCP; the other 3 are
+    # direct SQL. So an MCP-delivered tool appearing in the evidence — WITH rows — proves the MCP round-trip
+    # (routing + connection/service + serverless execution) actually worked, not just the SQL path. Which
+    # tools the LLM calls is its own choice, but for the demo cases indicator enrichment is always exercised.
+    report.step("assert an MCP-delivered tool ran with evidence (proves the managed + custom MCP transports)")
+    mcp_called = pg._scalar(
+        f"SELECT COALESCE(tools_called,'[]'::jsonb) ?| array['enrich_indicator','pivot_indicator'] AS hit "
+        f"FROM investigations WHERE investigation_id='{inv}'", "hit")
+    r.check("an MCP-delivered tool (enrich_indicator/pivot_indicator) was called", bool(mcp_called))
+    mcp_evidence = pg._scalar(
+        f"SELECT (jsonb_array_length(COALESCE(evidence->'enrich_indicator','[]'::jsonb)) > 0 "
+        f"      OR jsonb_array_length(COALESCE(evidence->'pivot_indicator','[]'::jsonb)) > 0) AS ok "
+        f"FROM investigations WHERE investigation_id='{inv}'", "ok")
+    r.check("an MCP-delivered tool returned evidence (MCP round-trip succeeded)", bool(mcp_evidence))
+
     # Audit trail: the RBAC model's whole point is that a MEMBER SP ran this. investigated_by is stamped with
     # the runner's real identity (the app SP for in_process, the job SP for job) — only the bare "app"/"job"
     # fallback strings mean identity resolution FAILED. Assert a real identity was recorded.

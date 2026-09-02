@@ -26,7 +26,7 @@ runnable on its own (`python3 -m tests.e2e.<name> …`).
 | 3d | **`setup`** *(dev)* | deployer | `scripts/setup.py` — Lakebase provision + build_structure |
 | 4 | `grant_seeder_lakebase` | deployer (owner) | grant the seeder SP `USAGE` + `SELECT/INSERT/DELETE` on `cases` + `DELETE` on `investigations` |
 | 5 | `seed` | **seeder** | deploy + run the separate `demo/` bundle (its own wheel) → Delta substrate + tools + 25 demo cases |
-| 6 | `admin_postdeploy` | admin | in_process: **add the app SP to the role** + warehouse `CAN_USE` + LLM `ACCESS`; job: no-op |
+| 6 | `admin_postdeploy` | admin | in_process: **add the app SP to the role** + warehouse `CAN_USE` + LLM `ACCESS`; job: no role work. **All modes:** provision the custom-MCP **UC HTTP Connection + MCP Service** (`tests/harness/mcp.py`) + grant the caller SP `CAN_USE` (app) / `EXECUTE` (service) — post-deploy because the server is app-hosted |
 
 ## Scenarios (mode-conditional — the SAME set for both strategies)
 

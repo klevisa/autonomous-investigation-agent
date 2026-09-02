@@ -33,6 +33,7 @@ that regular deployer is who we ship this code to.
 | Create the **seeder SP** (test-only) + its direct `CREATE_*` grants | `scripts/setup.py` — Lakebase + build_structure |
 | (job) create the job SP, **add it to the role**, `ACCESS` on the LLM credential, warehouse `CAN_USE` (job_warehouse) | Run investigations (Tines-style API calls) |
 | **post-deploy**: **add the app SP to the role** (in_process) + warehouse `CAN_USE` + LLM `ACCESS` | Restart / redeploy, observe recovery |
+| **post-deploy (all modes)**: create the custom-MCP **UC HTTP Connection + MCP Service** + grant the caller SP `CAN_USE` (app) / `EXECUTE` (service) — `tests/harness/mcp.py` | — |
 | (cicd) create the CI SP + push GitHub secrets/variables | Open a PR, merge, watch CI deploy |
 
 `config.env` names the profiles: `ADMIN_PROFILE`, `DEPLOYER_PROFILE`, `SEEDER_PROFILE`. Each phase uses the
