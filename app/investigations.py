@@ -218,7 +218,7 @@ def _make_investigation_deps():
       * pivot_indicator — Databricks managed MCP; the app's ambient WorkspaceClient identity already
         has EXECUTE on the function via AIA-role membership, enforced natively per caller.
       * enrich_indicator — the custom MCP server (app/mcp_server.py) behind a UC HTTP Connection +
-        MCP Service (databricks_ops/mcp_connection.py) — the door-key model (see README).
+        MCP Service (tests/harness/mcp.py) — the door-key model (see README).
     Built per run (cheap)."""
     from lib.tools import WarehouseSqlRunner, make_tool_fn
     from lib.mcp_tools import make_mcp_tool_fn, make_mcp_clients, make_routed_tool_fn

@@ -97,7 +97,7 @@ def make_routed_tool_fn(sql_tool_fn, mcp_tool_fn, mcp_tool_names=frozenset(UC_FU
 
 
 # Fixed name for the UC MCP Service that fronts the custom enrich_indicator server — created by
-# databricks_ops/mcp_connection.py. Both this module and that one hardcode the same name rather than
+# tests/harness/mcp.py. Both this module and that one hardcode the same name rather than
 # passing it around, since a single AIA deployment only ever provisions one.
 CUSTOM_MCP_SERVICE_NAME = "aia_enrich_indicator"
 
@@ -119,7 +119,7 @@ def managed_mcp_tool_name(catalog, schema, tool_name):
 
 def custom_mcp_url(host, catalog, schema, service_name=CUSTOM_MCP_SERVICE_NAME):
     """The AI-Gateway URL for a registered (connection-backed) MCP Service — fronts our own
-    app/mcp_server.py through the UC HTTP Connection (databricks_ops/mcp_connection.py). Confirmed
+    app/mcp_server.py through the UC HTTP Connection (tests/harness/mcp.py). Confirmed
     template (docs.databricks.com/aws/en/ai-gateway/register-mcp-service):
     https://<host>/ai-gateway/mcp-services/{catalog}.{schema}.{service_name} — note this is the AI
     Gateway path, distinct from managed_mcp_url's /api/2.0/mcp/functions/... path above. Unlike managed

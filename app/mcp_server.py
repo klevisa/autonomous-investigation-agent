@@ -6,7 +6,7 @@ Databricks-managed serverless compute (unitycatalog-ai's DatabricksFunctionClien
 serverless) instead of a warehouse — no warehouse dependency in any AIA_AGENT_MODE.
 
 Mounted into the FastAPI app (app/main.py) at /mcp/ and fronted, in production, by a Unity Catalog HTTP
-Connection + MCP Service (databricks_ops/mcp_connection.py) — that's the governance boundary; this
+Connection + MCP Service (tests/harness/mcp.py) — that's the governance boundary; this
 module has no idea whether it's being called through the connection or hit directly. That's the
 "door-key" model (see README): whoever reaches this code runs the UC function as the APP'S OWN ambient
 identity (DatabricksFunctionClient authenticates the same way every other line of this app does), not
